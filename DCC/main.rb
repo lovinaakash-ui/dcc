@@ -5325,7 +5325,6 @@ module AJ
           menu.add_item('Cabinet Actions') {
             manager.show_main_cabinet_action_dialog(selected_cabinet)
           }
-          end
         end
       end
       
