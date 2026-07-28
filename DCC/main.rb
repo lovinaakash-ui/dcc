@@ -4928,7 +4928,7 @@ module AJ
       # Helper method to create drawer components
       def create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
         # Create drawer bottom
-        drawer_bottom = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} BOTTOM", drawer_width, drawer_depth, 5.mm)
+        drawer_bottom = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} BOTTOM", drawer_width, drawer_depth, 18.mm)
         bottom_instance = drawer_group.entities.add_instance(drawer_bottom, [0, 0, 0])
         
         # Create drawer front
@@ -4937,20 +4937,20 @@ module AJ
         
         # Create drawer sides (left and right)
         side_depth = drawer_depth
-        side_height = drawer_height - 5.mm # Subtract bottom thickness
-        side_thickness = 5.mm
+        side_height = drawer_height - 18.mm
+        side_thickness = 18.mm
         
         left_side = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} LEFT SIDE", side_thickness, side_depth, side_height)
-        left_instance = drawer_group.entities.add_instance(left_side, [0, 0, 5.mm])
+        left_instance = drawer_group.entities.add_instance(left_side, [0, 0, 18.mm])
         
         right_side = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} RIGHT SIDE", side_thickness, side_depth, side_height)
-        right_instance = drawer_group.entities.add_instance(right_side, [drawer_width - side_thickness, 0, 5.mm])
+        right_instance = drawer_group.entities.add_instance(right_side, [drawer_width - side_thickness, 0, 18.mm])
         
         # Create drawer back
         back_width = drawer_width - (2 * side_thickness)
         back_height = side_height
         drawer_back = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} BACK", back_width, side_thickness, back_height)
-        back_instance = drawer_group.entities.add_instance(drawer_back, [side_thickness, side_depth, 5.mm])
+        back_instance = drawer_group.entities.add_instance(drawer_back, [side_thickness, side_depth, 18.mm])
       end
       
       # Get drawers for a specific section
