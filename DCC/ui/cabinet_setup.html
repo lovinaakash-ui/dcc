@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cabinet Setup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      background-color: white;
+    }
+    
+    select {
+      appearance: auto;
+      -webkit-appearance: menulist;
+      -moz-appearance: menulist;
+    }
+    
+    input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    .info-box {
+      background: #e7f3ff;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #0066cc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📏 Cabinet Setup</h1>
+    
+    <div class="info-box" id="cabinetInfo" style="display: none; background: #d4edda; color: #155724; border-left: 4px solid #28a745; margin-bottom: 15px;">
+      ✏️ <strong id="cabinetInfoText">Editing cabinet...</strong>
+    </div>
+    
+    <div class="form-group">
+      <label for="cabinetName">Cabinet Name</label>
+      <input type="text" id="cabinetName" placeholder="Auto-generated (e.g., C1, C2...)">
+      <div class="input-hint">Leave empty for auto-increment naming (when creating new)</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="quantity">Quantity</label>
+      <input type="number" id="quantity" value="1" min="1" max="100">
+      <div class="input-hint">Number of cabinets to create</div>
+    </div>
+    
+    <div class="form-group">
+      <label>Dimensions (mm)</label>
+      <div class="dimension-grid">
+        <div>
+          <label for="width">Width (W)</label>
+          <input type="number" id="width" value="600" min="100">
+        </div>
+        <div>
+          <label for="depth">Depth (D)</label>
+          <input type="number" id="depth" value="580" min="100">
+        </div>
+        <div>
+          <label for="height">Height (H)</label>
+          <input type="number" id="height" value="720" min="100">
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="panelThickness">Panel Thickness (mm)</label>
+      <input type="number" id="panelThickness" value="18" min="5" max="50">
+    </div>
+    
+    <div class="form-group">
+      <label for="backThickness">Back Panel Thickness (mm)</label>
+      <input type="number" id="backThickness" value="10" min="3" max="30">
+    </div>
+    
+    <div class="form-group">
+      <label for="backInset">Back Panel Inset (mm)</label>
+      <input type="number" id="backInset" value="18" min="0" max="50">
+      <div class="input-hint">Distance from front where back panel is positioned</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="panelOverlap">Panel Overlap Option</label>
+      <select id="panelOverlap">
+        <option value="none">None (Standard)</option>
+        <option value="top">Top Out</option>
+        <option value="bottom">Bottom Out</option>
+        <option value="left">Left Out</option>
+        <option value="right">Right Out</option>
+      </select>
+      <div class="input-hint">Select which panel extends over others</div>
+    </div>
+    
+    
+    
+    <div class="form-group" style="margin-top: 20px; border-top: 2px solid #ddd; padding-top: 15px;">
+      <label style="font-weight: bold; color: #28a745; margin-bottom: 10px;">Support Panels (Pattas) for Hanging Cabinet</label>
+      <div class="form-group" style="margin-top: 10px;">
+        <label>
+          <input type="checkbox" id="enableSupportPanels">
+          Enable Support Panels
+        </label>
+        <div class="input-hint">Check to add support panels at the back of the cabinet</div>
+      </div>
+      <div id="supportPanelOptions" style="margin-top: 10px; display: none;">
+        <div class="form-group">
+          <label for="supportPanelOrientation">Support Panel Orientation</label>
+          <select id="supportPanelOrientation">
+            <option value="vertical" selected>Vertical</option>
+            <option value="horizontal">Horizontal</option>
+          </select>
+          <div class="input-hint">Choose vertical or horizontal support panels (affects future geometry updates).</div>
+        </div>
+        <div class="form-group">
+          <label for="supportPanelCount">Number of Support Panels</label>
+          <input type="number" id="supportPanelCount" value="2" min="1" max="10">
+          <div class="input-hint">Number of support panels at the back (default: 2)</div>
+        </div>
+        <div class="form-group">
+          <label for="supportPanelHeight">Support Panel Height (mm)</label>
+          <input type="number" id="supportPanelHeight" value="100" min="50" max="500">
+          <div class="input-hint">Height of each support panel (default: 100mm)</div>
+        </div>
+      </div>
+    </div>
+    
+    <button id="createButton">Create Cabinet</button>
+    
+    <button id="refreshButton" style="background: #6c757d; margin-top: 5px;">🔄 Refresh from Selected Cabinet</button>
+    
+    <div class="info-box">
+      ℹ️ <strong>Tip:</strong> Select a cabinet to load its values for editing. Leave no selection to create new cabinets.<br>
+      📐 Cabinet includes 5 core panels (Top, Bottom, Left, Right, Back).<br>
+      📏 Back panel size: Width - 18mm × Height - 18mm<br>
+      📍 Back panel position: Inserted AFTER the inset distance (default 18mm from front)
+    </div>
+    
+    <div class="form-group" style="margin-top: 20px;">
+      <label style="font-weight: bold; color: #007bff; margin-top: 20px; border-top: 2px solid #ddd; padding-top: 15px;">Or Upload from Excel/CSV</label>
+      <div class="input-hint" style="margin-bottom: 10px;">
+        CSV format: Name,Width,Depth,Height,Quantity,PanelThickness,BackThickness,BackInset<br>
+        Header row optional. Columns can be in any order.
+      </div>
+      <button type="button" id="bulkUploadButton" style="background: #28a745; margin-top: 0;">
+        📁 Bulk Upload &amp; Edit
+      </button>
+      <div class="input-hint" style="margin-top: 5px;">Opens table view where you can review and edit all rows before creating</div>
+    </div>
+  </div>
+  
+  <script>
+    // Toggle support panel options visibility
+    document.getElementById('enableSupportPanels').addEventListener('change', function() {
+      const optionsDiv = document.getElementById('supportPanelOptions');
+      if (this.checked) {
+        optionsDiv.style.display = 'block';
+      } else {
+        optionsDiv.style.display = 'none';
+      }
+    });
+    
+    document.getElementById('createButton').addEventListener('click', function() {
+      const enableSupportPanels = document.getElementById('enableSupportPanels').checked;
+      const params = {
+        name: document.getElementById('cabinetName').value,
+        cabinetName: document.getElementById('cabinetName').value,
+        quantity: parseInt(document.getElementById('quantity').value) || 1,
+        width: document.getElementById('width').value,
+        depth: document.getElementById('depth').value,
+        height: document.getElementById('height').value,
+        panelThickness: document.getElementById('panelThickness').value,
+        backThickness: document.getElementById('backThickness').value,
+        backInset: document.getElementById('backInset').value,
+        panelOverlap: document.getElementById('panelOverlap').value,
+        supportPanelCount: enableSupportPanels ? (parseInt(document.getElementById('supportPanelCount').value) || 2) : 0,
+        supportPanelHeight: enableSupportPanels ? (parseFloat(document.getElementById('supportPanelHeight').value) || 100) : 100,
+        supportPanelOrientation: document.getElementById('supportPanelOrientation').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.createCabinet(params);
+      }
+    });
+    
+    document.getElementById('bulkUploadButton').addEventListener('click', function() {
+      if (window.sketchup) {
+        window.sketchup.showBulkUpload();
+      }
+    });
+    
+    document.getElementById('refreshButton').addEventListener('click', function() {
+      if (window.sketchup) {
+        window.sketchup.getSelectedCabinetProperties();
+      }
+    });
+    
+    // Auto-refresh when dialog is shown
+    if (window.sketchup) {
+      window.sketchup.getSelectedCabinetProperties();
+    }
+  </script>
+</body>
+</html>
+

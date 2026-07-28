@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Cabinet Creator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 10px;
+      background: #f5f5f5;
+    }
+    
+    .accordion-section {
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .accordion-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .accordion-header:hover {
+      background: #0056b3;
+    }
+    
+    .accordion-content {
+      padding: 20px;
+      background: white;
+      display: none;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #218838;
+    }
+    
+    .info-box {
+      background: #e7f3ff;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #0066cc;
+    }
+    
+    .divider {
+      height: 1px;
+      background: #ddd;
+      margin: 20px 0;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+      font-size: 13px;
+    }
+    
+    th {
+      background: #007bff;
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    
+    tr:hover {
+      background: #f0f0f0;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.3s;
+      margin: 5px;
+    }
+    
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    
+    .btn-add {
+      background: #17a2b8;
+      color: white;
+      padding: 6px 12px;
+      font-size: 16px;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 5px;
+    }
+    
+    .btn-add:hover {
+      background: #138496;
+    }
+    
+    .button-group {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .delete-btn:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const content = header.nextElementSibling;
+          content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        });
+      });
+
+      // Cabinet Setup
+      document.getElementById('createCabinetButton').addEventListener('click', function() {
+        const params = {
+          name: document.getElementById('cabinetName').value,
+          quantity: parseInt(document.getElementById('quantity').value) || 1,
+          width: document.getElementById('width').value,
+          depth: document.getElementById('depth').value,
+          height: document.getElementById('height').value,
+          panelThickness: document.getElementById('panelThickness').value,
+          backThickness: document.getElementById('backThickness').value,
+          backInset: document.getElementById('backInset').value
+        };
+        if (window.sketchup) {
+          window.sketchup.createCabinet(params);
+        }
+      });
+
+      // Cabinet Structure
+      document.getElementById('updateStructureButton').addEventListener('click', function() {
+        const params = {
+          panelThickness: document.getElementById('structure_panelThickness').value,
+          backThickness: document.getElementById('structure_backThickness').value,
+          backInset: document.getElementById('structure_backInset').value
+        };
+        if (window.sketchup) {
+          window.sketchup.updateStructure(params);
+        }
+      });
+
+      // Shelves & Partitions
+      document.getElementById('updateShelvesPartitionsButton').addEventListener('click', function() {
+        const params = {
+          numShelves: document.getElementById('numShelves').value,
+          shelfThickness: document.getElementById('shelfThickness').value,
+          numPartitions: document.getElementById('numPartitions').value,
+          partitionThickness: document.getElementById('partitionThickness').value
+        };
+        if (window.sketchup) {
+          window.sketchup.updateShelvesPartitions(params);
+        }
+      });
+
+      // Drawers
+      document.getElementById('addDrawersButton').addEventListener('click', function() {
+        const params = {
+          numDrawers: document.getElementById('numDrawers').value,
+          drawerHeights: document.getElementById('drawerHeights').value,
+          drawerPanelThickness: document.getElementById('drawerPanelThickness').value,
+          drawerBottomThickness: document.getElementById('drawerBottomThickness').value
+        };
+        if (window.sketchup) {
+          window.sketchup.updateDrawers(params);
+        }
+      });
+
+      // Shutters
+      document.getElementById('addShutterButton').addEventListener('click', function() {
+        const params = {
+          doorType: document.getElementById('doorType').value,
+          doorThickness: document.getElementById('doorThickness').value,
+          doorMaterial: document.getElementById('doorMaterial').value
+        };
+        if (window.sketchup) {
+          window.sketchup.updateShutters(params);
+        }
+      });
+
+      // Material Panel
+      const materialColors = {
+        white: '#ffffff',
+        oak: '#c19a6b',
+        walnut: '#5d4037',
+        grey: '#9e9e9e',
+        black: '#000000',
+        blue: '#2196F3',
+        green: '#4CAF50',
+        orange: '#FF9800'
+      };
+      
+      document.getElementById('frontFaceMaterial').addEventListener('change', function() {
+        document.getElementById('frontPreview').style.background = materialColors[this.value] || '#ffffff';
+      });
+      
+      document.getElementById('backFaceMaterial').addEventListener('change', function() {
+        document.getElementById('backPreview').style.background = materialColors[this.value] || '#ffffff';
+      });
+      
+      document.querySelectorAll('.swatch').forEach(swatch => {
+        swatch.addEventListener('click', function() {
+          const material = this.getAttribute('data-material');
+          document.getElementById('frontFaceMaterial').value = material;
+          document.getElementById('frontPreview').style.background = materialColors[material];
+          
+          document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+      });
+      
+      document.getElementById('applyMaterialsButton').addEventListener('click', function() {
+        const params = {
+          frontMaterial: document.getElementById('frontFaceMaterial').value,
+          backMaterial: document.getElementById('backFaceMaterial').value
+        };
+        
+        if (window.sketchup) {
+          window.sketchup.updateMaterials(params);
+        }
+      });
+
+      // Panel Creation
+      document.getElementById('createPanelButton').addEventListener('click', function() {
+        const params = {
+          name: document.getElementById('panelName').value,
+          quantity: parseInt(document.getElementById('panel_quantity').value) || 1,
+          width: document.getElementById('panel_width').value,
+          height: document.getElementById('panel_height').value,
+          thickness: document.getElementById('panel_thickness').value
+        };
+        
+        if (window.sketchup) {
+          window.sketchup.createPanel(params);
+        }
+      });
+
+      // Bulk Panel Upload
+      let panelRowCounter = 0;
+      
+      function addPanelRow(data = {}) {
+        const tbody = document.getElementById('panelTableBody');
+        const row = document.createElement('tr');
+        row.id = `panel-row-${panelRowCounter++}`;
+        
+        row.innerHTML = `
+          <td><input type="text" class="name-input" value="${data.name || ''}" placeholder="Panel 1"></td>
+          <td><input type="number" class="quantity-input" value="${data.quantity || '1'}" min="1" max="100"></td>
+          <td><input type="number" class="width-input" value="${data.width || '600'}" min="10"></td>
+          <td><input type="number" class="height-input" value="${data.height || '720'}" min="10"></td>
+          <td><input type="number" class="thickness-input" value="${data.thickness || '18'}" min="3"></td>
+          <td><button class="delete-btn" onclick="deletePanelRow('${row.id}')">Delete</button></td>
+        `;
+        
+        tbody.appendChild(row);
+      }
+      
+      function deletePanelRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (row) {
+          row.remove();
+        }
+      }
+      
+      function getAllPanelRowsData() {
+        const rows = [];
+        const tbody = document.getElementById('panelTableBody');
+        const tableRows = tbody.querySelectorAll('tr');
+        
+        tableRows.forEach(row => {
+          const name = row.querySelector('.name-input')?.value || '';
+          const quantity = row.querySelector('.quantity-input')?.value || '1';
+          const width = row.querySelector('.width-input')?.value || '600';
+          const height = row.querySelector('.height-input')?.value || '720';
+          const thickness = row.querySelector('.thickness-input')?.value || '18';
+          
+          if (width && height && thickness) {
+            rows.push({
+              name: name.trim(),
+              quantity: parseInt(quantity) || 1,
+              width: parseFloat(width),
+              height: parseFloat(height),
+              thickness: parseFloat(thickness)
+            });
+          }
+        });
+        
+        return rows;
+      }
+      
+      document.getElementById('uploadFileBtn').addEventListener('click', function() {
+        if (window.sketchup) {
+          window.sketchup.uploadPanelsFileAndDisplay();
+        }
+      });
+      
+      document.getElementById('downloadTemplateBtn').addEventListener('click', function() {
+        if (window.sketchup) {
+          window.sketchup.downloadPanelTemplate();
+        }
+      });
+      
+      document.getElementById('addPanelRowBtn').addEventListener('click', function() {
+        addPanelRow();
+      });
+      
+      document.getElementById('createAllPanelsBtn').addEventListener('click', function() {
+        const rows = getAllPanelRowsData();
+        if (rows.length === 0) {
+          alert('Please add at least one panel row.');
+          return;
+        }
+        
+        if (window.sketchup) {
+          window.sketchup.createBulkPanels(rows);
+        }
+      });
+      
+      document.getElementById('clearAllPanelsBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all rows?')) {
+          document.getElementById('panelTableBody').innerHTML = '';
+          panelRowCounter = 0;
+        }
+      });
+      
+      addPanelRow();
+      
+      window.displayPanelsData = function(data) {
+        const tbody = document.getElementById('panelTableBody');
+        tbody.innerHTML = '';
+        panelRowCounter = 0;
+        
+        if (data && data.length > 0) {
+          data.forEach(rowData => {
+            addPanelRow(rowData);
+          });
+        } else {
+          addPanelRow();
+        }
+      };
+
+      // Bulk Cabinet Upload
+      let cabinetRowCounter = 0;
+      
+      function addCabinetRow(data = {}) {
+        const tbody = document.getElementById('cabinetTableBody');
+        const row = document.createElement('tr');
+        row.id = `cabinet-row-${cabinetRowCounter++}`;
+        
+        row.innerHTML = `
+          <td><input type="text" class="name-input" value="${data.name || ''}" placeholder="C1"></td>
+          <td><input type="number" class="width-input" value="${data.width || '600'}" min="100"></td>
+          <td><input type="number" class="depth-input" value="${data.depth || '580'}" min="100"></td>
+          <td><input type="number" class="height-input" value="${data.height || '720'}" min="100"></td>
+          <td><input type="number" class="quantity-input" value="${data.quantity || '1'}" min="1" max="100"></td>
+          <td><input type="number" class="panelThickness-input" value="${data.panelThickness || '18'}" min="5"></td>
+          <td><input type="number" class="backThickness-input" value="${data.backThickness || '10'}" min="3"></td>
+          <td><input type="number" class="backInset-input" value="${data.backInset || '18'}" min="0"></td>
+          <td><button class="delete-btn" onclick="deleteCabinetRow('${row.id}')">Delete</button></td>
+        `;
+        
+        tbody.appendChild(row);
+      }
+      
+      function deleteCabinetRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (row) {
+          row.remove();
+        }
+      }
+      
+      function getAllCabinetRowsData() {
+        const rows = [];
+        const tbody = document.getElementById('cabinetTableBody');
+        const tableRows = tbody.querySelectorAll('tr');
+        
+        tableRows.forEach(row => {
+          const name = row.querySelector('.name-input')?.value || '';
+          const width = row.querySelector('.width-input')?.value || '600';
+          const depth = row.querySelector('.depth-input')?.value || '580';
+          const height = row.querySelector('.height-input')?.value || '720';
+          const quantity = row.querySelector('.quantity-input')?.value || '1';
+          const panelThickness = row.querySelector('.panelThickness-input')?.value || '18';
+          const backThickness = row.querySelector('.backThickness-input')?.value || '10';
+          const backInset = row.querySelector('.backInset-input')?.value || '18';
+          
+          if (width && depth && height) {
+            rows.push({
+              name: name.trim(),
+              width: parseFloat(width),
+              depth: parseFloat(depth),
+              height: parseFloat(height),
+              quantity: parseInt(quantity) || 1,
+              panelThickness: parseFloat(panelThickness),
+              backThickness: parseFloat(backThickness),
+              backInset: parseFloat(backInset)
+            });
+          }
+        });
+        
+        return rows;
+      }
+      
+      document.getElementById('uploadCabinetFileBtn').addEventListener('click', function() {
+        if (window.sketchup) {
+          window.sketchup.uploadCabinetsFileAndDisplay();
+        }
+      });
+      
+      document.getElementById('downloadCabinetTemplateBtn').addEventListener('click', function() {
+        if (window.sketchup) {
+          window.sketchup.downloadCabinetTemplate();
+        }
+      });
+      
+      document.getElementById('addCabinetRowBtn').addEventListener('click', function() {
+        addCabinetRow();
+      });
+      
+      document.getElementById('createAllCabinetsBtn').addEventListener('click', function() {
+        const rows = getAllCabinetRowsData();
+        if (rows.length === 0) {
+          alert('Please add at least one cabinet row.');
+          return;
+        }
+        
+        if (window.sketchup) {
+          window.sketchup.createBulkCabinets(rows);
+        }
+      });
+      
+      document.getElementById('clearAllCabinetsBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all rows?')) {
+          document.getElementById('cabinetTableBody').innerHTML = '';
+          cabinetRowCounter = 0;
+        }
+      });
+      
+      addCabinetRow();
+      
+      window.displayCabinetsData = function(data) {
+        const tbody = document.getElementById('cabinetTableBody');
+        tbody.innerHTML = '';
+        cabinetRowCounter = 0;
+        
+        if (data && data.length > 0) {
+          data.forEach(rowData => {
+            addCabinetRow(rowData);
+          });
+        } else {
+          addCabinetRow();
+        }
+      };
+
+      // Component Properties
+      window.loadComponentData = function(data) {
+        document.getElementById('componentName').textContent = data.name || 'Unknown Component';
+        document.getElementById('prop_width').value = data.width || 0;
+        document.getElementById('prop_depth').value = data.depth || 0;
+        document.getElementById('prop_height').value = data.height || 0;
+      };
+      
+      document.getElementById('applyChangesButton').addEventListener('click', function() {
+        const params = {
+          width: document.getElementById('prop_width').value,
+          depth: document.getElementById('prop_depth').value,
+          height: document.getElementById('prop_height').value,
+          frontMaterial: document.getElementById('prop_frontMaterial').value,
+          backMaterial: document.getElementById('prop_backMaterial').value,
+          panelThickness: document.getElementById('prop_panelThickness').value
+        };
+        
+        if (window.sketchup) {
+          window.sketchup.updateProperty(params);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

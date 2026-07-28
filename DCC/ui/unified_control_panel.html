@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Cabinet Creator - Control Panel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 0;
+      background: #f5f5f5;
+      overflow: hidden;
+    }
+    
+    .container {
+      background: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+      font-weight: 600;
+    }
+    
+    .scrollable-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .accordion-section {
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+    }
+    
+    .accordion-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s;
+    }
+    
+    .accordion-header:hover {
+      background: #0056b3;
+    }
+    
+    .accordion-header.active {
+      background: #0056b3;
+    }
+    
+    .accordion-header.cabinet-setup {
+      background: #007bff;
+    }
+    
+    .accordion-header.cabinet-setup:hover,
+    .accordion-header.cabinet-setup.active {
+      background: #0056b3;
+    }
+    
+    .accordion-header.cabinet-structure {
+      background: #28a745;
+    }
+    
+    .accordion-header.cabinet-structure:hover,
+    .accordion-header.cabinet-structure.active {
+      background: #218838;
+    }
+    
+    .accordion-header.shelves-partitions {
+      background: #ff9800;
+    }
+    
+    .accordion-header.shelves-partitions:hover,
+    .accordion-header.shelves-partitions.active {
+      background: #e68900;
+    }
+    
+    .accordion-header.shutters {
+      background: #9c27b0;
+    }
+    
+    .accordion-header.shutters:hover,
+    .accordion-header.shutters.active {
+      background: #7b1fa2;
+    }
+    
+    .accordion-header.material {
+      background: #ff5722;
+    }
+    
+    .accordion-header.material:hover,
+    .accordion-header.material.active {
+      background: #e64a19;
+    }
+    
+    .accordion-header.panel-materials {
+      background: #9c27b0;
+    }
+    
+    .accordion-header.panel-materials:hover,
+    .accordion-header.panel-materials.active {
+      background: #7b1fa2;
+    }
+    
+    .accordion-header.panel-creation {
+      background: #00bcd4;
+    }
+    
+    .accordion-header.panel-creation:hover,
+    .accordion-header.panel-creation.active {
+      background: #0097a7;
+    }
+    
+    .accordion-icon {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+    
+    .accordion-arrow {
+      font-size: 18px;
+      transition: transform 0.3s;
+    }
+    
+    .accordion-header.active .accordion-arrow {
+      transform: rotate(180deg);
+    }
+    
+    .accordion-content {
+      padding: 20px;
+      background: white;
+      display: none;
+    }
+    
+    .accordion-content.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      background-color: white;
+    }
+    
+    select {
+      appearance: auto;
+      -webkit-appearance: menulist;
+      -moz-appearance: menulist;
+    }
+    
+    input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      opacity: 0.9;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-primary {
+      background: #007bff;
+    }
+    
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+    
+    .btn-success {
+      background: #28a745;
+    }
+    
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .btn-warning {
+      background: #ff9800;
+    }
+    
+    .btn-warning:hover {
+      background: #e68900;
+    }
+    
+    .btn-purple {
+      background: #9c27b0;
+    }
+    
+    .btn-purple:hover {
+      background: #7b1fa2;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+    }
+    
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    
+    .btn-info {
+      background: #00bcd4;
+    }
+    
+    .btn-info:hover {
+      background: #0097a7;
+    }
+    
+    .info-box {
+      background: #e7f3ff;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #0066cc;
+      border-left: 4px solid #007bff;
+    }
+    
+    .warning-box {
+      background: #fff3cd;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #856404;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .cabinet-info {
+      background: #d4edda;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-left: 4px solid #28a745;
+      color: #155724;
+    }
+    
+    .section-divider {
+      border-top: 1px solid #ddd;
+      margin: 20px 0;
+      padding-top: 15px;
+    }
+    
+    .divider {
+      height: 1px;
+      background: #ddd;
+      margin: 15px 0;
+    }
+    
+    h2 {
+      font-size: 16px;
+      color: #555;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .material-preview {
+      width: 100%;
+      height: 50px;
+      border-radius: 4px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      background: #c0c0c0;
+    }
+    
+    .material-swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .swatch {
+      height: 60px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    
+    .swatch:hover {
+      border-color: #007bff;
+    }
+    
+    .swatch.selected {
+      border-color: #007bff;
+      border-width: 3px;
+    }
+    
+    .panel-section {
+      margin-bottom: 15px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      position: relative;
+    }
+    
+    .panel-section.removed {
+      opacity: 0.5;
+      background: #f0f0f0;
+    }
+    
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 90px;
+      position: relative;
+    }
+    
+    .panel-icon {
+      font-size: 18px;
+    }
+    
+    .panel-title-text {
+      flex: 1;
+    }
+    
+    .remove-panel-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: background 0.3s;
+      z-index: 10;
+    }
+    
+    .remove-panel-btn:hover {
+      background: #c82333;
+    }
+    
+    .remove-panel-btn.restore {
+      background: #28a745;
+    }
+    
+    .remove-panel-btn.restore:hover {
+      background: #218838;
+    }
+    
+    .material-preview-small {
+      width: 100%;
+      height: 35px;
+      border-radius: 4px;
+      margin-top: 6px;
+      border: 1px solid #ddd;
+      background: #c0c0c0;
+    }
+    
+    .material-swatches-small {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+    
+    .swatch-small {
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    
+    .swatch-small:hover {
+      border-color: #9c27b0;
+    }
+    
+    .swatch-small.selected {
+      border-color: #9c27b0;
+      border-width: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏗️ Dynamic Cabinet Creator</h1>
+    </div>
+    
+    <div class="scrollable-content">
+      <!-- Cabinet Setup Section -->
+      <div class="accordion-section">
+        <div class="accordion-header cabinet-setup active" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">📏</span> Cabinet Setup</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content active" id="cabinetSetupContent">
+          <div class="cabinet-info" id="cabinetInfo" style="display: none;">
+            ✏️ <strong id="cabinetInfoText">Editing cabinet...</strong>
+          </div>
+          
+          <div class="form-group">
+            <label for="cabinetName">Cabinet Name</label>
+            <input type="text" id="cabinetName" placeholder="Auto-generated (e.g., C1, C2...)">
+            <div class="input-hint">Leave empty for auto-increment naming (when creating new)</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" value="1" min="1" max="100">
+            <div class="input-hint">Number of cabinets to create</div>
+          </div>
+          
+          <div class="form-group">
+            <label>Dimensions (mm)</label>
+            <div class="dimension-grid">
+              <div>
+                <label for="width">Width (W)</label>
+                <input type="number" id="width" value="600" min="100">
+              </div>
+              <div>
+                <label for="depth">Depth (D)</label>
+                <input type="number" id="depth" value="580" min="100">
+              </div>
+              <div>
+                <label for="height">Height (H)</label>
+                <input type="number" id="height" value="720" min="100">
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="panelThickness">Panel Thickness (mm)</label>
+            <input type="number" id="panelThickness" value="18" min="5" max="50">
+          </div>
+          
+          <div class="form-group">
+            <label for="backThickness">Back Panel Thickness (mm)</label>
+            <input type="number" id="backThickness" value="10" min="3" max="30">
+          </div>
+          
+          <div class="form-group">
+            <label for="backInset">Back Panel Inset (mm)</label>
+            <input type="number" id="backInset" value="18" min="0" max="50">
+            <div class="input-hint">Distance from front where back panel is positioned</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="panelOverlap">Panel Overlap Option</label>
+            <select id="panelOverlap">
+              <option value="none">None (Standard)</option>
+              <option value="top">Top Out</option>
+              <option value="bottom">Bottom Out</option>
+              <option value="left">Left Out</option>
+              <option value="right">Right Out</option>
+            </select>
+          </div>
+          
+          <div class="section-divider">
+            <label style="font-weight: bold; color: #28a745;">Support Panels (Pattas)</label>
+            <div class="form-group" style="margin-top: 10px;">
+              <label>
+                <input type="checkbox" id="enableSupportPanels" checked>
+                Enable Support Panels
+              </label>
+            </div>
+            <div id="supportPanelOptions">
+              <div class="form-group">
+                <label for="supportPanelCount">Number of Support Panels</label>
+                <input type="number" id="supportPanelCount" value="2" min="1" max="10">
+              </div>
+              <div class="form-group">
+                <label for="supportPanelHeight">Support Panel Height (mm)</label>
+                <input type="number" id="supportPanelHeight" value="100" min="50" max="500">
+              </div>
+            </div>
+          </div>
+          
+          <div class="section-divider">
+            <label style="font-weight: bold; color: #007bff;">Bulk Upload from Excel/CSV</label>
+            <button type="button" id="bulkCabinetUploadButton" class="btn-success" style="margin-top: 10px;">📁 Bulk Upload & Edit</button>
+          </div>
+          
+          <button id="createCabinetButton" class="btn-primary">Create Cabinet</button>
+          <button id="refreshCabinetButton" class="btn-success" style="margin-top: 5px;">🔄 Refresh from Selected Cabinet</button>
+          
+          <div class="info-box">
+            ℹ️ Select a cabinet to load its values for editing. Leave no selection to create new cabinets.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cabinet Structure Section -->
+      <div class="accordion-section">
+        <div class="accordion-header cabinet-structure" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">🧱</span> Cabinet Structure</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content" id="cabinetStructureContent">
+          <div class="form-group">
+            <label for="structure_panelThickness">Cabinet Panel Thickness (mm)</label>
+            <input type="number" id="structure_panelThickness" value="18" min="5" max="50">
+            <div class="input-hint">Thickness for left, right, top, and bottom panels</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="structure_backThickness">Back Panel Thickness (mm)</label>
+            <input type="number" id="structure_backThickness" value="10" min="3" max="30">
+          </div>
+          
+          <div class="form-group">
+            <label for="structure_backInset">Back Panel Inset (mm)</label>
+            <input type="number" id="structure_backInset" value="18" min="0" max="50">
+            <div class="input-hint">Distance from front where back panel is inserted</div>
+          </div>
+          
+          <button id="updateStructureButton" class="btn-success">Update Structure</button>
+          
+          <div class="warning-box">
+            ⚠️ Please select a cabinet before updating. Changes will apply in real-time.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Shelves & Partitions Section -->
+      <div class="accordion-section">
+        <div class="accordion-header shelves-partitions" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">🪵</span> Shelves & Partitions</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content" id="shelvesPartitionsContent">
+          <h2>Shelves</h2>
+          <div class="form-group">
+            <label for="numShelves">Number of Shelves</label>
+            <input type="number" id="numShelves" value="0" min="0" max="10">
+            <div class="input-hint">Evenly spaced horizontal shelves</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="shelfThickness">Shelf Thickness (mm)</label>
+            <input type="number" id="shelfThickness" value="18" min="5" max="50">
+          </div>
+          
+          <div class="divider"></div>
+          
+          <h2>Vertical Partitions</h2>
+          <div class="form-group">
+            <label for="numPartitions">Number of Vertical Partitions</label>
+            <input type="number" id="numPartitions" value="0" min="0" max="5">
+            <div class="input-hint">Evenly spaced vertical dividers</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="partitionThickness">Partition Thickness (mm)</label>
+            <input type="number" id="partitionThickness" value="18" min="5" max="50">
+          </div>
+          
+          <div class="divider"></div>
+          
+          <h2>Drawer Partitions</h2>
+          <div class="form-group">
+            <label for="numDrawerPartitions">Number of Drawer Partitions</label>
+            <input type="number" id="numDrawerPartitions" value="0" min="0" max="5">
+            <div class="input-hint">Vertical partitions for creating drawer sections</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="drawerPartitionThickness">Drawer Partition Thickness (mm)</label>
+            <input type="number" id="drawerPartitionThickness" value="18" min="5" max="50">
+          </div>
+          
+          <div class="divider"></div>
+          
+          <h2>Drawers</h2>
+          <div class="form-group">
+            <label for="numDrawers">Number of Drawers</label>
+            <input type="number" id="numDrawers" value="0" min="0" max="10">
+            <div class="input-hint">Drawers stacked from bottom</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="drawerHeight">Drawer Height (mm)</label>
+            <input type="number" id="drawerHeight" value="100" min="50" max="500">
+          </div>
+          
+          <div class="form-group">
+            <label for="drawerFrontThickness">Drawer Front Thickness (mm)</label>
+            <input type="number" id="drawerFrontThickness" value="18" min="5" max="50">
+          </div>
+          
+          <button id="updateShelvesPartitionsButton" class="btn-warning">Update Shelves, Partitions & Drawers</button>
+          
+          <div class="info-box">
+            ℹ️ Depth auto-adjusts: Cabinet Depth - Back Thickness - Back Inset<br>
+            🔧 Use "Select Section" after adding drawer partitions to add drawers to specific sections
+          </div>
+        </div>
+      </div>
+      
+      <!-- Shutters/Doors Section -->
+      <div class="accordion-section">
+        <div class="accordion-header shutters" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">🚪</span> Shutters / Doors</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content" id="shuttersContent">
+          <div class="form-group">
+            <label for="doorType">Door Type</label>
+            <select id="doorType">
+              <option value="none">None</option>
+              <option value="single">Single Door</option>
+              <option value="double">Double Door</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="doorThickness">Door Thickness (mm)</label>
+            <input type="number" id="doorThickness" value="18" min="5" max="30">
+          </div>
+          
+          <div class="form-group">
+            <label for="doorMaterial">Door Material/Finish</label>
+            <select id="doorMaterial">
+              <option value="default">Default</option>
+              <option value="wood">Wood</option>
+              <option value="glass">Glass</option>
+              <option value="laminate">Laminate</option>
+            </select>
+          </div>
+          
+          <button id="updateShuttersButton" class="btn-purple">Add Shutter</button>
+          
+          <div class="info-box">
+            ℹ️ Shutters are added without hinges or handles. Configure thickness as needed.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Material Panel Section (hidden: materials are now controlled via SketchUp tools only) -->
+      <div class="accordion-section" style="display: none;">
+        <div class="accordion-header material" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">🎨</span> Material Panel</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content" id="materialContent">
+          <div class="form-group">
+            <label for="cabinetMaterial">Cabinet Material</label>
+            <select id="cabinetMaterial">
+              <option value="grey" selected>Silver Grey (Default)</option>
+              <option value="white">White Matte</option>
+              <option value="oak">Oak Woodgrain</option>
+              <option value="walnut">Walnut</option>
+              <option value="black">Black Gloss</option>
+              <option value="blue">Blue</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <div class="material-preview" id="materialPreview" style="background: #c0c0c0;"></div>
+          </div>
+          
+          <div class="form-group">
+            <label>Material Presets</label>
+            <div class="material-swatches">
+              <div class="swatch selected" style="background: #c0c0c0;" data-material="grey"></div>
+              <div class="swatch" style="background: #ffffff;" data-material="white"></div>
+              <div class="swatch" style="background: #c19a6b;" data-material="oak"></div>
+              <div class="swatch" style="background: #5d4037;" data-material="walnut"></div>
+              <div class="swatch" style="background: #000000;" data-material="black"></div>
+              <div class="swatch" style="background: #2196F3;" data-material="blue"></div>
+              <div class="swatch" style="background: #4CAF50;" data-material="green"></div>
+              <div class="swatch" style="background: #FF9800;" data-material="orange"></div>
+            </div>
+          </div>
+          
+          <button id="updateMaterialsButton" class="btn-danger">Apply Materials</button>
+          
+          <div class="info-box">
+            ℹ️ Select a cabinet (group) or panel (component) in SketchUp, then apply materials.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Edit Panel Materials Section (hidden: per-panel materials handled via SketchUp tools only) -->
+      <div class="accordion-section" style="display: none;">
+        <div class="accordion-header panel-materials" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">🎨</span> Edit Panel Materials</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content" id="panelMaterialsContent">
+          <div class="cabinet-info" id="panelMaterialsCabinetInfo">
+            <strong>Cabinet:</strong> <span id="panelMaterialsCabinetName">No cabinet selected</span>
+          </div>
+          
+          <div class="panel-section" id="topPanelSection">
+            <div class="panel-title">
+              <span class="panel-icon">⬆️</span>
+              <span class="panel-title-text">Top Panel</span>
+              <button class="remove-panel-btn" id="removeTopBtn" data-panel="top" onclick="toggleRemovePanel('top')">Remove</button>
+            </div>
+            <div class="form-group">
+              <label for="topMaterial">Material</label>
+              <select id="topMaterial" class="material-select">
+                <option value="grey" selected>Silver Grey</option>
+                <option value="white">White Matte</option>
+                <option value="oak">Oak Woodgrain</option>
+                <option value="walnut">Walnut</option>
+                <option value="black">Black Gloss</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="orange">Orange</option>
+              </select>
+              <div class="material-preview-small" id="topPreview" style="background: #c0c0c0;"></div>
+              <div class="material-swatches-small">
+                <div class="swatch-small selected" style="background: #c0c0c0;" data-material="grey" data-panel="top"></div>
+                <div class="swatch-small" style="background: #ffffff;" data-material="white" data-panel="top"></div>
+                <div class="swatch-small" style="background: #c19a6b;" data-material="oak" data-panel="top"></div>
+                <div class="swatch-small" style="background: #5d4037;" data-material="walnut" data-panel="top"></div>
+                <div class="swatch-small" style="background: #000000;" data-material="black" data-panel="top"></div>
+                <div class="swatch-small" style="background: #2196F3;" data-material="blue" data-panel="top"></div>
+                <div class="swatch-small" style="background: #4CAF50;" data-material="green" data-panel="top"></div>
+                <div class="swatch-small" style="background: #FF9800;" data-material="orange" data-panel="top"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="panel-section" id="bottomPanelSection">
+            <div class="panel-title">
+              <span class="panel-icon">⬇️</span>
+              <span class="panel-title-text">Bottom Panel</span>
+              <button class="remove-panel-btn" id="removeBottomBtn" data-panel="bottom" onclick="toggleRemovePanel('bottom')">Remove</button>
+            </div>
+            <div class="form-group">
+              <label for="bottomMaterial">Material</label>
+              <select id="bottomMaterial" class="material-select">
+                <option value="grey" selected>Silver Grey</option>
+                <option value="white">White Matte</option>
+                <option value="oak">Oak Woodgrain</option>
+                <option value="walnut">Walnut</option>
+                <option value="black">Black Gloss</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="orange">Orange</option>
+              </select>
+              <div class="material-preview-small" id="bottomPreview" style="background: #c0c0c0;"></div>
+              <div class="material-swatches-small">
+                <div class="swatch-small selected" style="background: #c0c0c0;" data-material="grey" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #ffffff;" data-material="white" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #c19a6b;" data-material="oak" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #5d4037;" data-material="walnut" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #000000;" data-material="black" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #2196F3;" data-material="blue" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #4CAF50;" data-material="green" data-panel="bottom"></div>
+                <div class="swatch-small" style="background: #FF9800;" data-material="orange" data-panel="bottom"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="panel-section" id="leftPanelSection">
+            <div class="panel-title">
+              <span class="panel-icon">⬅️</span>
+              <span class="panel-title-text">Left Panel</span>
+              <button class="remove-panel-btn" id="removeLeftBtn" data-panel="left" onclick="toggleRemovePanel('left')">Remove</button>
+            </div>
+            <div class="form-group">
+              <label for="leftMaterial">Material</label>
+              <select id="leftMaterial" class="material-select">
+                <option value="grey" selected>Silver Grey</option>
+                <option value="white">White Matte</option>
+                <option value="oak">Oak Woodgrain</option>
+                <option value="walnut">Walnut</option>
+                <option value="black">Black Gloss</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="orange">Orange</option>
+              </select>
+              <div class="material-preview-small" id="leftPreview" style="background: #c0c0c0;"></div>
+              <div class="material-swatches-small">
+                <div class="swatch-small selected" style="background: #c0c0c0;" data-material="grey" data-panel="left"></div>
+                <div class="swatch-small" style="background: #ffffff;" data-material="white" data-panel="left"></div>
+                <div class="swatch-small" style="background: #c19a6b;" data-material="oak" data-panel="left"></div>
+                <div class="swatch-small" style="background: #5d4037;" data-material="walnut" data-panel="left"></div>
+                <div class="swatch-small" style="background: #000000;" data-material="black" data-panel="left"></div>
+                <div class="swatch-small" style="background: #2196F3;" data-material="blue" data-panel="left"></div>
+                <div class="swatch-small" style="background: #4CAF50;" data-material="green" data-panel="left"></div>
+                <div class="swatch-small" style="background: #FF9800;" data-material="orange" data-panel="left"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="panel-section" id="rightPanelSection">
+            <div class="panel-title">
+              <span class="panel-icon">➡️</span>
+              <span class="panel-title-text">Right Panel</span>
+              <button class="remove-panel-btn" id="removeRightBtn" data-panel="right" onclick="toggleRemovePanel('right')">Remove</button>
+            </div>
+            <div class="form-group">
+              <label for="rightMaterial">Material</label>
+              <select id="rightMaterial" class="material-select">
+                <option value="grey" selected>Silver Grey</option>
+                <option value="white">White Matte</option>
+                <option value="oak">Oak Woodgrain</option>
+                <option value="walnut">Walnut</option>
+                <option value="black">Black Gloss</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="orange">Orange</option>
+              </select>
+              <div class="material-preview-small" id="rightPreview" style="background: #c0c0c0;"></div>
+              <div class="material-swatches-small">
+                <div class="swatch-small selected" style="background: #c0c0c0;" data-material="grey" data-panel="right"></div>
+                <div class="swatch-small" style="background: #ffffff;" data-material="white" data-panel="right"></div>
+                <div class="swatch-small" style="background: #c19a6b;" data-material="oak" data-panel="right"></div>
+                <div class="swatch-small" style="background: #5d4037;" data-material="walnut" data-panel="right"></div>
+                <div class="swatch-small" style="background: #000000;" data-material="black" data-panel="right"></div>
+                <div class="swatch-small" style="background: #2196F3;" data-material="blue" data-panel="right"></div>
+                <div class="swatch-small" style="background: #4CAF50;" data-material="green" data-panel="right"></div>
+                <div class="swatch-small" style="background: #FF9800;" data-material="orange" data-panel="right"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="panel-section" id="backPanelSection">
+            <div class="panel-title">
+              <span class="panel-icon">🔙</span>
+              <span class="panel-title-text">Back Panel</span>
+              <button class="remove-panel-btn" id="removeBackBtn" data-panel="back" onclick="toggleRemovePanel('back')">Remove</button>
+            </div>
+            <div class="form-group">
+              <label for="backMaterial">Material</label>
+              <select id="backMaterial" class="material-select">
+                <option value="grey" selected>Silver Grey</option>
+                <option value="white">White Matte</option>
+                <option value="oak">Oak Woodgrain</option>
+                <option value="walnut">Walnut</option>
+                <option value="black">Black Gloss</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="orange">Orange</option>
+              </select>
+              <div class="material-preview-small" id="backPreview" style="background: #c0c0c0;"></div>
+              <div class="material-swatches-small">
+                <div class="swatch-small selected" style="background: #c0c0c0;" data-material="grey" data-panel="back"></div>
+                <div class="swatch-small" style="background: #ffffff;" data-material="white" data-panel="back"></div>
+                <div class="swatch-small" style="background: #c19a6b;" data-material="oak" data-panel="back"></div>
+                <div class="swatch-small" style="background: #5d4037;" data-material="walnut" data-panel="back"></div>
+                <div class="swatch-small" style="background: #000000;" data-material="black" data-panel="back"></div>
+                <div class="swatch-small" style="background: #2196F3;" data-material="blue" data-panel="back"></div>
+                <div class="swatch-small" style="background: #4CAF50;" data-material="green" data-panel="back"></div>
+                <div class="swatch-small" style="background: #FF9800;" data-material="orange" data-panel="back"></div>
+              </div>
+            </div>
+          </div>
+          
+          <button id="updatePanelMaterialsButton" class="btn-purple">Apply Panel Materials</button>
+          
+          <div class="info-box">
+            ℹ️ Click "Remove" to remove a panel from the cabinet, or "Restore" to add it back.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Panel Creation Section -->
+      <div class="accordion-section">
+        <div class="accordion-header panel-creation" onclick="toggleAccordion(this)">
+          <span><span class="accordion-icon">📐</span> Panel Creation</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-content" id="panelCreationContent">
+          <div class="form-group">
+            <label for="panelName">Panel Name</label>
+            <input type="text" id="panelName" placeholder="Enter panel name (optional)">
+            <div class="input-hint">Leave empty for auto-generated name</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="panelQuantity">Quantity</label>
+            <input type="number" id="panelQuantity" value="1" min="1" max="100">
+            <div class="input-hint">Number of panels to create</div>
+          </div>
+          
+          <div class="form-group">
+            <label>Dimensions (mm)</label>
+            <div class="dimension-grid">
+              <div>
+                <label for="panelWidth">Width (W)</label>
+                <input type="number" id="panelWidth" value="600" min="10">
+              </div>
+              <div>
+                <label for="panelHeight">Height (H)</label>
+                <input type="number" id="panelHeight" value="720" min="10">
+              </div>
+              <div>
+                <label for="panelThickness">Thickness (T)</label>
+                <input type="number" id="panelThickness" value="18" min="3">
+              </div>
+            </div>
+          </div>
+          
+          <div class="section-divider">
+            <label style="font-weight: bold; color: #007bff;">Bulk Upload from Excel/CSV</label>
+            <button type="button" id="bulkPanelUploadButton" class="btn-success" style="margin-top: 10px;">📁 Bulk Upload & Edit</button>
+          </div>
+          
+          <button id="createPanelButton" class="btn-info">Create Panel</button>
+          
+          <div class="info-box">
+            ℹ️ Panels are created as standalone components without any material. Use SketchUp's Paint Bucket to color them if needed.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Accordion functionality
+    function toggleAccordion(header) {
+      const content = header.nextElementSibling;
+      const isActive = header.classList.contains('active');
+      
+      // Close all accordions
+      document.querySelectorAll('.accordion-header').forEach(h => {
+        h.classList.remove('active');
+        h.nextElementSibling.classList.remove('active');
+      });
+      
+      // Toggle current accordion
+      if (!isActive) {
+        header.classList.add('active');
+        content.classList.add('active');
+      }
+    }
+    
+    // Material colors
+    const materialColors = {
+      white: '#ffffff',
+      oak: '#c19a6b',
+      walnut: '#5d4037',
+      grey: '#c0c0c0',
+      black: '#000000',
+      blue: '#2196F3',
+      green: '#4CAF50',
+      orange: '#FF9800'
+    };
+    
+    // Cabinet Setup
+    document.getElementById('enableSupportPanels').addEventListener('change', function() {
+      document.getElementById('supportPanelOptions').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    document.getElementById('createCabinetButton').addEventListener('click', function() {
+      const enableSupportPanels = document.getElementById('enableSupportPanels').checked;
+      const params = {
+        name: document.getElementById('cabinetName').value,
+        cabinetName: document.getElementById('cabinetName').value,
+        quantity: parseInt(document.getElementById('quantity').value) || 1,
+        width: document.getElementById('width').value,
+        depth: document.getElementById('depth').value,
+        height: document.getElementById('height').value,
+        panelThickness: document.getElementById('panelThickness').value,
+        backThickness: document.getElementById('backThickness').value,
+        backInset: document.getElementById('backInset').value,
+        panelOverlap: document.getElementById('panelOverlap').value,
+        supportPanelCount: enableSupportPanels ? (parseInt(document.getElementById('supportPanelCount').value) || 2) : 0,
+        supportPanelHeight: enableSupportPanels ? (parseFloat(document.getElementById('supportPanelHeight').value) || 100) : 100
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.createCabinet(params);
+      }
+    });
+    
+    document.getElementById('refreshCabinetButton').addEventListener('click', function() {
+      if (window.sketchup) {
+        window.sketchup.getSelectedCabinetProperties();
+      }
+    });
+    
+    document.getElementById('bulkCabinetUploadButton').addEventListener('click', function() {
+      if (window.sketchup) {
+        window.sketchup.showBulkUpload();
+      }
+    });
+    
+    // Cabinet Structure
+    document.getElementById('updateStructureButton').addEventListener('click', function() {
+      const params = {
+        panelThickness: document.getElementById('structure_panelThickness').value,
+        backThickness: document.getElementById('structure_backThickness').value,
+        backInset: document.getElementById('structure_backInset').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateStructure(params);
+      }
+    });
+    
+    // Shelves & Partitions
+    document.getElementById('updateShelvesPartitionsButton').addEventListener('click', function() {
+      const params = {
+        numShelves: document.getElementById('numShelves').value,
+        shelfThickness: document.getElementById('shelfThickness').value,
+        numPartitions: document.getElementById('numPartitions').value,
+        partitionThickness: document.getElementById('partitionThickness').value,
+        numDrawerPartitions: document.getElementById('numDrawerPartitions').value,
+        drawerPartitionThickness: document.getElementById('drawerPartitionThickness').value,
+        numDrawers: document.getElementById('numDrawers').value,
+        drawerHeight: document.getElementById('drawerHeight').value,
+        drawerFrontThickness: document.getElementById('drawerFrontThickness').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateShelvesPartitions(params);
+      }
+    });
+    
+    // Shutters
+    document.getElementById('updateShuttersButton').addEventListener('click', function() {
+      const params = {
+        doorType: document.getElementById('doorType').value,
+        doorThickness: document.getElementById('doorThickness').value,
+        doorMaterial: document.getElementById('doorMaterial').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateShutters(params);
+      }
+    });
+    
+    // Material Panel
+    document.getElementById('cabinetMaterial').addEventListener('change', function() {
+      document.getElementById('materialPreview').style.background = materialColors[this.value] || '#c0c0c0';
+    });
+    
+    document.querySelectorAll('#materialContent .swatch').forEach(swatch => {
+      swatch.addEventListener('click', function() {
+        const material = this.getAttribute('data-material');
+        document.getElementById('cabinetMaterial').value = material;
+        document.getElementById('materialPreview').style.background = materialColors[material];
+        document.querySelectorAll('#materialContent .swatch').forEach(s => s.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+    
+    document.getElementById('updateMaterialsButton').addEventListener('click', function() {
+      const params = {
+        material: document.getElementById('cabinetMaterial').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateMaterials(params);
+      }
+    });
+    
+    // Panel Materials
+    const removedPanels = {
+      top: false,
+      bottom: false,
+      left: false,
+      right: false,
+      back: false
+    };
+    
+    const panels = ['top', 'bottom', 'left', 'right', 'back'];
+    
+    panels.forEach(panel => {
+      const select = document.getElementById(panel + 'Material');
+      const preview = document.getElementById(panel + 'Preview');
+      
+      select.addEventListener('change', function() {
+        preview.style.background = materialColors[this.value] || '#c0c0c0';
+        updateSwatchSelection(panel, this.value);
+      });
+    });
+    
+    document.querySelectorAll('#panelMaterialsContent .swatch-small').forEach(swatch => {
+      swatch.addEventListener('click', function() {
+        const material = this.getAttribute('data-material');
+        const panel = this.getAttribute('data-panel');
+        const select = document.getElementById(panel + 'Material');
+        const preview = document.getElementById(panel + 'Preview');
+        
+        select.value = material;
+        preview.style.background = materialColors[material];
+        updateSwatchSelection(panel, material);
+      });
+    });
+    
+    function updateSwatchSelection(panel, material) {
+      document.querySelectorAll(`#panelMaterialsContent .swatch-small[data-panel="${panel}"]`).forEach(s => {
+        s.classList.remove('selected');
+      });
+      const selectedSwatch = document.querySelector(`#panelMaterialsContent .swatch-small[data-panel="${panel}"][data-material="${material}"]`);
+      if (selectedSwatch) {
+        selectedSwatch.classList.add('selected');
+      }
+    }
+    
+    function toggleRemovePanel(panel) {
+      removedPanels[panel] = !removedPanels[panel];
+      const section = document.getElementById(panel + 'PanelSection');
+      const btn = document.getElementById('remove' + panel.charAt(0).toUpperCase() + panel.slice(1) + 'Btn');
+      
+      if (removedPanels[panel]) {
+        section.classList.add('removed');
+        btn.textContent = 'Restore';
+        btn.classList.add('restore');
+        document.getElementById(panel + 'Material').disabled = true;
+      } else {
+        section.classList.remove('removed');
+        btn.textContent = 'Remove';
+        btn.classList.remove('restore');
+        document.getElementById(panel + 'Material').disabled = false;
+      }
+    }
+    
+    document.getElementById('updatePanelMaterialsButton').addEventListener('click', function() {
+      const params = {
+        topMaterial: document.getElementById('topMaterial').value,
+        bottomMaterial: document.getElementById('bottomMaterial').value,
+        leftMaterial: document.getElementById('leftMaterial').value,
+        rightMaterial: document.getElementById('rightMaterial').value,
+        backMaterial: document.getElementById('backMaterial').value,
+        removePanels: removedPanels
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updatePanelMaterials(params);
+      }
+    });
+    
+    // Panel Creation
+    document.getElementById('createPanelButton').addEventListener('click', function() {
+      const params = {
+        name: document.getElementById('panelName').value,
+        quantity: parseInt(document.getElementById('panelQuantity').value) || 1,
+        width: document.getElementById('panelWidth').value,
+        height: document.getElementById('panelHeight').value,
+        thickness: document.getElementById('panelThickness').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.createPanel(params);
+      }
+    });
+    
+    document.getElementById('bulkPanelUploadButton').addEventListener('click', function() {
+      if (window.sketchup) {
+        window.sketchup.showBulkPanelUpload();
+      }
+    });
+    
+    // Auto-refresh cabinet properties when dialog opens
+    if (window.sketchup) {
+      window.sketchup.getSelectedCabinetProperties();
+    }
+  </script>
+</body>
+</html>
+

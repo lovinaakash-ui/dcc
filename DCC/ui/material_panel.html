@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Material Panel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ff5722;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #ff5722;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    .color-preview {
+      width: 100%;
+      height: 50px;
+      border-radius: 4px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ff5722;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #e64a19;
+    }
+    
+    .material-swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .swatch {
+      height: 60px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    
+    .swatch:hover {
+      border-color: #ff5722;
+    }
+    
+    .swatch.selected {
+      border-color: #ff5722;
+      border-width: 3px;
+    }
+    
+    .info-box {
+      background: #fbe9e7;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #bf360c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Material Panel</h1>
+    
+    <div class="form-group">
+      <label for="cabinetMaterial">Cabinet Material</label>
+      <select id="cabinetMaterial">
+        <option value="grey" selected>Silver Grey (Default)</option>
+        <option value="white">White Matte</option>
+        <option value="oak">Oak Woodgrain</option>
+        <option value="walnut">Walnut</option>
+        <option value="black">Black Gloss</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+        <option value="orange">Orange</option>
+        <option value="custom">Custom...</option>
+      </select>
+      <div class="color-preview" id="materialPreview" style="background: #c0c0c0;"></div>
+    </div>
+    
+    <div class="form-group">
+      <label>Material Presets</label>
+      <div class="material-swatches">
+        <div class="swatch selected" style="background: #c0c0c0;" data-material="grey"></div>
+        <div class="swatch" style="background: #ffffff;" data-material="white"></div>
+        <div class="swatch" style="background: #c19a6b;" data-material="oak"></div>
+        <div class="swatch" style="background: #5d4037;" data-material="walnut"></div>
+        <div class="swatch" style="background: #000000;" data-material="black"></div>
+        <div class="swatch" style="background: #2196F3;" data-material="blue"></div>
+        <div class="swatch" style="background: #4CAF50;" data-material="green"></div>
+        <div class="swatch" style="background: #FF9800;" data-material="orange"></div>
+      </div>
+    </div>
+    
+    <button id="updateButton">Apply Materials</button>
+    
+    <div class="info-box">
+      ℹ️ <strong>Instructions:</strong><br>
+      1. Select a cabinet (group) or panel (component) in SketchUp<br>
+      2. Choose a material from dropdown or swatches<br>
+      3. Click "Apply Materials" to update the selected component<br><br>
+      📝 <strong>Tip:</strong> The same material will be applied to all faces of the cabinet/panel
+    </div>
+  </div>
+  
+  <script>
+    const materialColors = {
+      white: '#ffffff',
+      oak: '#c19a6b',
+      walnut: '#5d4037',
+      grey: '#c0c0c0',  // Silver Grey
+      black: '#000000',
+      blue: '#2196F3',
+      green: '#4CAF50',
+      orange: '#FF9800'
+    };
+    
+    document.getElementById('cabinetMaterial').addEventListener('change', function() {
+      document.getElementById('materialPreview').style.background = materialColors[this.value] || '#c0c0c0';
+    });
+    
+    document.querySelectorAll('.swatch').forEach(swatch => {
+      swatch.addEventListener('click', function() {
+        const material = this.getAttribute('data-material');
+        document.getElementById('cabinetMaterial').value = material;
+        document.getElementById('materialPreview').style.background = materialColors[material];
+        
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+    
+    document.getElementById('updateButton').addEventListener('click', function() {
+      const params = {
+        material: document.getElementById('cabinetMaterial').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateMaterials(params);
+      }
+    });
+  </script>
+</body>
+</html>
+

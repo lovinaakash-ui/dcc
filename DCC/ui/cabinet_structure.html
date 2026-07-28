@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cabinet Structure</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #28a745;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #218838;
+    }
+    
+    .warning-box {
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #856404;
+      border-left: 4px solid #ffc107;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧱 Cabinet Structure</h1>
+    
+    <div class="form-group">
+      <label for="panelThickness">Cabinet Panel Thickness (mm)</label>
+      <input type="number" id="panelThickness" value="18" min="5" max="50">
+      <div class="input-hint">Thickness for left, right, top, and bottom panels</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="backThickness">Back Panel Thickness (mm)</label>
+      <input type="number" id="backThickness" value="10" min="3" max="30">
+    </div>
+    
+    <div class="form-group">
+      <label for="backInset">Back Panel Inset (mm)</label>
+      <input type="number" id="backInset" value="18" min="0" max="50">
+      <div class="input-hint">Distance from front where back panel is inserted</div>
+    </div>
+    
+    <button id="updateButton">Update Structure</button>
+    
+    <div class="warning-box">
+      ⚠️ Please select a cabinet before updating. Changes will apply in real-time.<br>
+      📏 Back panel formula: Width - 18mm × Height - 18mm
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('updateButton').addEventListener('click', function() {
+      const params = {
+        panelThickness: document.getElementById('panelThickness').value,
+        backThickness: document.getElementById('backThickness').value,
+        backInset: document.getElementById('backInset').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateStructure(params);
+      }
+    });
+  </script>
+</body>
+</html>
+

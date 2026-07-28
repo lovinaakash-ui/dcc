@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Cabinet Properties</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-height: 700px;
+      overflow-y: auto;
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+    
+    .cabinet-info {
+      background: #e7f3ff;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .cabinet-info strong {
+      color: #0056b3;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      background-color: white;
+      appearance: auto;
+      -webkit-appearance: menulist;
+      -moz-appearance: menulist;
+    }
+    
+    input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    .section-divider {
+      margin: 20px 0;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    .warning-box {
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #856404;
+      border-left: 4px solid #ffc107;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✏️ Edit Cabinet Properties</h1>
+    
+    <div class="cabinet-info" id="cabinetInfo">
+      <strong>Cabinet:</strong> <span id="cabinetName">Loading...</span>
+    </div>
+    
+    <div class="section-title">Basic Dimensions</div>
+    
+    <div class="form-group">
+      <label for="cabinetNameInput">Cabinet Name</label>
+      <input type="text" id="cabinetNameInput" placeholder="Enter cabinet name">
+    </div>
+    
+    <div class="form-group">
+      <label for="width">Width (mm)</label>
+      <input type="number" id="width" min="100" max="5000" step="1">
+      <div class="input-hint">Overall width of the cabinet</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="depth">Depth (mm)</label>
+      <input type="number" id="depth" min="100" max="2000" step="1">
+      <div class="input-hint">Overall depth of the cabinet</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="height">Height (mm)</label>
+      <input type="number" id="height" min="100" max="5000" step="1">
+      <div class="input-hint">Overall height of the cabinet</div>
+    </div>
+    
+    <div class="section-divider"></div>
+    <div class="section-title">Panel Structure</div>
+    
+    <div class="form-group">
+      <label for="panelThickness">Panel Thickness (mm)</label>
+      <input type="number" id="panelThickness" min="5" max="50" step="1">
+      <div class="input-hint">Thickness for left, right, top, and bottom panels</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="backThickness">Back Panel Thickness (mm)</label>
+      <input type="number" id="backThickness" min="3" max="30" step="1">
+    </div>
+    
+    <div class="form-group">
+      <label for="backInset">Back Panel Inset (mm)</label>
+      <input type="number" id="backInset" min="0" max="50" step="1">
+      <div class="input-hint">Distance from front where back panel is inserted</div>
+    </div>
+    
+    <div class="section-divider"></div>
+    <div class="section-title">Panel Overlap</div>
+    
+    <div class="form-group">
+      <label for="panelOverlap">Panel Overlap Option</label>
+      <select id="panelOverlap">
+        <option value="none">None (Standard)</option>
+        <option value="top">Top Out</option>
+        <option value="bottom">Bottom Out</option>
+        <option value="left">Left Out</option>
+        <option value="right">Right Out</option>
+      </select>
+      <div class="input-hint">Select which panel extends over others</div>
+    </div>
+    
+    <div class="section-divider"></div>
+    <div class="section-title">Support Panels (Pattas) for Hanging Cabinet</div>
+    
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="enableSupportPanels">
+        Enable Support Panels
+      </label>
+      <div class="input-hint">Check to add support panels at the back of the cabinet</div>
+    </div>
+    
+    <div id="supportPanelOptions" style="margin-top: 10px;">
+      <div class="form-group">
+        <label for="supportPanelCount">Number of Support Panels</label>
+        <input type="number" id="supportPanelCount" value="2" min="1" max="10">
+        <div class="input-hint">Number of support panels at the back (default: 2)</div>
+      </div>
+      <div class="form-group">
+        <label for="supportPanelHeight">Support Panel Height (mm)</label>
+        <input type="number" id="supportPanelHeight" value="100" min="50" max="500">
+        <div class="input-hint">Height of each support panel (default: 100mm)</div>
+      </div>
+    </div>
+    
+    <button id="updateButton">Update Cabinet Properties</button>
+    
+    <div class="warning-box">
+      ⚠️ Changing dimensions will rebuild the cabinet. All internal components (shelves, partitions, drawers) will be preserved but may need adjustment.
+    </div>
+  </div>
+  
+  <script>
+    // Toggle support panel options visibility
+    document.getElementById('enableSupportPanels').addEventListener('change', function() {
+      const optionsDiv = document.getElementById('supportPanelOptions');
+      if (this.checked) {
+        optionsDiv.style.display = 'block';
+      } else {
+        optionsDiv.style.display = 'none';
+      }
+    });
+    
+    // Handle update button click
+    document.getElementById('updateButton').addEventListener('click', function() {
+      const enableSupportPanels = document.getElementById('enableSupportPanels').checked;
+      const params = {
+        cabinetName: document.getElementById('cabinetNameInput').value,
+        width: document.getElementById('width').value,
+        depth: document.getElementById('depth').value,
+        height: document.getElementById('height').value,
+        panelThickness: document.getElementById('panelThickness').value,
+        backThickness: document.getElementById('backThickness').value,
+        backInset: document.getElementById('backInset').value,
+        panelOverlap: document.getElementById('panelOverlap').value,
+        supportPanelCount: enableSupportPanels ? (parseInt(document.getElementById('supportPanelCount').value) || 2) : 0,
+        supportPanelHeight: enableSupportPanels ? (parseFloat(document.getElementById('supportPanelHeight').value) || 100) : 100
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updateCabinetProperties(params);
+      }
+    });
+  </script>
+</body>
+</html>
+

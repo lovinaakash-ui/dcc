@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Panel Materials</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-height: 700px;
+      overflow-y: auto;
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #9c27b0;
+      padding-bottom: 10px;
+    }
+    
+    .cabinet-info {
+      background: #f3e5f5;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border-left: 4px solid #9c27b0;
+    }
+    
+    .cabinet-info strong {
+      color: #7b1fa2;
+    }
+    
+    .panel-section {
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #fafafa;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      position: relative;
+    }
+    
+    .panel-section.removed {
+      opacity: 0.5;
+      background: #f0f0f0;
+    }
+    
+    .remove-panel-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: background 0.3s;
+      z-index: 10;
+    }
+    
+    .remove-panel-btn:hover {
+      background: #c82333;
+    }
+    
+    .remove-panel-btn.restore {
+      background: #28a745;
+    }
+    
+    .remove-panel-btn.restore:hover {
+      background: #218838;
+    }
+    
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 100px;
+      position: relative;
+    }
+    
+    .panel-icon {
+      font-size: 20px;
+    }
+    
+    .panel-title-text {
+      flex: 1;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      background-color: white;
+      appearance: auto;
+      -webkit-appearance: menulist;
+      -moz-appearance: menulist;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #9c27b0;
+    }
+    
+    .material-preview {
+      width: 100%;
+      height: 40px;
+      border-radius: 4px;
+      margin-top: 8px;
+      border: 1px solid #ddd;
+      background: #c0c0c0;
+    }
+    
+    .material-swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .swatch {
+      height: 50px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    
+    .swatch:hover {
+      border-color: #9c27b0;
+    }
+    
+    .swatch.selected {
+      border-color: #9c27b0;
+      border-width: 3px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #9c27b0;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #7b1fa2;
+    }
+    
+    .info-box {
+      background: #e1bee7;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #4a148c;
+      border-left: 4px solid #9c27b0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Edit Panel Materials</h1>
+    
+    <div class="cabinet-info" id="cabinetInfo">
+      <strong>Cabinet:</strong> <span id="cabinetName">Loading...</span>
+    </div>
+    
+    <div class="panel-section" id="topPanelSection">
+      <div class="panel-title">
+        <span class="panel-icon">⬆️</span>
+        <span class="panel-title-text">Top Panel</span>
+        <button class="remove-panel-btn" id="removeTopBtn" data-panel="top" onclick="toggleRemovePanel('top')">Remove</button>
+      </div>
+      <div class="form-group">
+        <label for="topMaterial">Material</label>
+        <select id="topMaterial" class="material-select">
+          <option value="grey" selected>Silver Grey (Default)</option>
+          <option value="white">White Matte</option>
+          <option value="oak">Oak Woodgrain</option>
+          <option value="walnut">Walnut</option>
+          <option value="black">Black Gloss</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="orange">Orange</option>
+        </select>
+        <div class="material-preview" id="topPreview" style="background: #c0c0c0;"></div>
+        <div class="material-swatches">
+          <div class="swatch selected" style="background: #c0c0c0;" data-material="grey" data-panel="top"></div>
+          <div class="swatch" style="background: #ffffff;" data-material="white" data-panel="top"></div>
+          <div class="swatch" style="background: #c19a6b;" data-material="oak" data-panel="top"></div>
+          <div class="swatch" style="background: #5d4037;" data-material="walnut" data-panel="top"></div>
+          <div class="swatch" style="background: #000000;" data-material="black" data-panel="top"></div>
+          <div class="swatch" style="background: #2196F3;" data-material="blue" data-panel="top"></div>
+          <div class="swatch" style="background: #4CAF50;" data-material="green" data-panel="top"></div>
+          <div class="swatch" style="background: #FF9800;" data-material="orange" data-panel="top"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel-section" id="bottomPanelSection">
+      <div class="panel-title">
+        <span class="panel-icon">⬇️</span>
+        <span class="panel-title-text">Bottom Panel</span>
+        <button class="remove-panel-btn" id="removeBottomBtn" data-panel="bottom" onclick="toggleRemovePanel('bottom')">Remove</button>
+      </div>
+      <div class="form-group">
+        <label for="bottomMaterial">Material</label>
+        <select id="bottomMaterial" class="material-select">
+          <option value="grey" selected>Silver Grey (Default)</option>
+          <option value="white">White Matte</option>
+          <option value="oak">Oak Woodgrain</option>
+          <option value="walnut">Walnut</option>
+          <option value="black">Black Gloss</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="orange">Orange</option>
+        </select>
+        <div class="material-preview" id="bottomPreview" style="background: #c0c0c0;"></div>
+        <div class="material-swatches">
+          <div class="swatch selected" style="background: #c0c0c0;" data-material="grey" data-panel="bottom"></div>
+          <div class="swatch" style="background: #ffffff;" data-material="white" data-panel="bottom"></div>
+          <div class="swatch" style="background: #c19a6b;" data-material="oak" data-panel="bottom"></div>
+          <div class="swatch" style="background: #5d4037;" data-material="walnut" data-panel="bottom"></div>
+          <div class="swatch" style="background: #000000;" data-material="black" data-panel="bottom"></div>
+          <div class="swatch" style="background: #2196F3;" data-material="blue" data-panel="bottom"></div>
+          <div class="swatch" style="background: #4CAF50;" data-material="green" data-panel="bottom"></div>
+          <div class="swatch" style="background: #FF9800;" data-material="orange" data-panel="bottom"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel-section" id="leftPanelSection">
+      <div class="panel-title">
+        <span class="panel-icon">⬅️</span>
+        <span class="panel-title-text">Left Panel</span>
+        <button class="remove-panel-btn" id="removeLeftBtn" data-panel="left" onclick="toggleRemovePanel('left')">Remove</button>
+      </div>
+      <div class="form-group">
+        <label for="leftMaterial">Material</label>
+        <select id="leftMaterial" class="material-select">
+          <option value="grey" selected>Silver Grey (Default)</option>
+          <option value="white">White Matte</option>
+          <option value="oak">Oak Woodgrain</option>
+          <option value="walnut">Walnut</option>
+          <option value="black">Black Gloss</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="orange">Orange</option>
+        </select>
+        <div class="material-preview" id="leftPreview" style="background: #c0c0c0;"></div>
+        <div class="material-swatches">
+          <div class="swatch selected" style="background: #c0c0c0;" data-material="grey" data-panel="left"></div>
+          <div class="swatch" style="background: #ffffff;" data-material="white" data-panel="left"></div>
+          <div class="swatch" style="background: #c19a6b;" data-material="oak" data-panel="left"></div>
+          <div class="swatch" style="background: #5d4037;" data-material="walnut" data-panel="left"></div>
+          <div class="swatch" style="background: #000000;" data-material="black" data-panel="left"></div>
+          <div class="swatch" style="background: #2196F3;" data-material="blue" data-panel="left"></div>
+          <div class="swatch" style="background: #4CAF50;" data-material="green" data-panel="left"></div>
+          <div class="swatch" style="background: #FF9800;" data-material="orange" data-panel="left"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel-section" id="rightPanelSection">
+      <div class="panel-title">
+        <span class="panel-icon">➡️</span>
+        <span class="panel-title-text">Right Panel</span>
+        <button class="remove-panel-btn" id="removeRightBtn" data-panel="right" onclick="toggleRemovePanel('right')">Remove</button>
+      </div>
+      <div class="form-group">
+        <label for="rightMaterial">Material</label>
+        <select id="rightMaterial" class="material-select">
+          <option value="grey" selected>Silver Grey (Default)</option>
+          <option value="white">White Matte</option>
+          <option value="oak">Oak Woodgrain</option>
+          <option value="walnut">Walnut</option>
+          <option value="black">Black Gloss</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="orange">Orange</option>
+        </select>
+        <div class="material-preview" id="rightPreview" style="background: #c0c0c0;"></div>
+        <div class="material-swatches">
+          <div class="swatch selected" style="background: #c0c0c0;" data-material="grey" data-panel="right"></div>
+          <div class="swatch" style="background: #ffffff;" data-material="white" data-panel="right"></div>
+          <div class="swatch" style="background: #c19a6b;" data-material="oak" data-panel="right"></div>
+          <div class="swatch" style="background: #5d4037;" data-material="walnut" data-panel="right"></div>
+          <div class="swatch" style="background: #000000;" data-material="black" data-panel="right"></div>
+          <div class="swatch" style="background: #2196F3;" data-material="blue" data-panel="right"></div>
+          <div class="swatch" style="background: #4CAF50;" data-material="green" data-panel="right"></div>
+          <div class="swatch" style="background: #FF9800;" data-material="orange" data-panel="right"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel-section" id="backPanelSection">
+      <div class="panel-title">
+        <span class="panel-icon">🔙</span>
+        <span class="panel-title-text">Back Panel</span>
+        <button class="remove-panel-btn" id="removeBackBtn" data-panel="back" onclick="toggleRemovePanel('back')">Remove</button>
+      </div>
+      <div class="form-group">
+        <label for="backMaterial">Material</label>
+        <select id="backMaterial" class="material-select">
+          <option value="grey" selected>Silver Grey (Default)</option>
+          <option value="white">White Matte</option>
+          <option value="oak">Oak Woodgrain</option>
+          <option value="walnut">Walnut</option>
+          <option value="black">Black Gloss</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="orange">Orange</option>
+        </select>
+        <div class="material-preview" id="backPreview" style="background: #c0c0c0;"></div>
+        <div class="material-swatches">
+          <div class="swatch selected" style="background: #c0c0c0;" data-material="grey" data-panel="back"></div>
+          <div class="swatch" style="background: #ffffff;" data-material="white" data-panel="back"></div>
+          <div class="swatch" style="background: #c19a6b;" data-material="oak" data-panel="back"></div>
+          <div class="swatch" style="background: #5d4037;" data-material="walnut" data-panel="back"></div>
+          <div class="swatch" style="background: #000000;" data-material="black" data-panel="back"></div>
+          <div class="swatch" style="background: #2196F3;" data-material="blue" data-panel="back"></div>
+          <div class="swatch" style="background: #4CAF50;" data-material="green" data-panel="back"></div>
+          <div class="swatch" style="background: #FF9800;" data-material="orange" data-panel="back"></div>
+        </div>
+      </div>
+    </div>
+    
+    <button id="updateButton">Apply Panel Materials</button>
+    
+    <div class="info-box">
+      ℹ️ <strong>Instructions:</strong><br>
+      Select a material for each panel from the dropdown or click the color swatches. Click "Remove" to remove a panel from the cabinet, or "Restore" to add it back. Click "Apply Panel Materials" to update all panels at once.
+    </div>
+  </div>
+  
+  <script>
+    const materialColors = {
+      white: '#ffffff',
+      oak: '#c19a6b',
+      walnut: '#5d4037',
+      grey: '#c0c0c0',
+      black: '#000000',
+      blue: '#2196F3',
+      green: '#4CAF50',
+      orange: '#FF9800'
+    };
+    
+    const panels = ['top', 'bottom', 'left', 'right', 'back'];
+    
+    // Update preview when dropdown changes
+    panels.forEach(panel => {
+      const select = document.getElementById(panel + 'Material');
+      const preview = document.getElementById(panel + 'Preview');
+      
+      select.addEventListener('change', function() {
+        preview.style.background = materialColors[this.value] || '#c0c0c0';
+        updateSwatchSelection(panel, this.value);
+      });
+    });
+    
+    // Handle swatch clicks
+    document.querySelectorAll('.swatch').forEach(swatch => {
+      swatch.addEventListener('click', function() {
+        const material = this.getAttribute('data-material');
+        const panel = this.getAttribute('data-panel');
+        const select = document.getElementById(panel + 'Material');
+        const preview = document.getElementById(panel + 'Preview');
+        
+        select.value = material;
+        preview.style.background = materialColors[material];
+        updateSwatchSelection(panel, material);
+      });
+    });
+    
+    function updateSwatchSelection(panel, material) {
+      // Remove selected class from all swatches for this panel
+      document.querySelectorAll(`.swatch[data-panel="${panel}"]`).forEach(s => {
+        s.classList.remove('selected');
+      });
+      
+      // Add selected class to the matching swatch
+      const selectedSwatch = document.querySelector(`.swatch[data-panel="${panel}"][data-material="${material}"]`);
+      if (selectedSwatch) {
+        selectedSwatch.classList.add('selected');
+      }
+    }
+    
+    const removedPanels = {
+      top: false,
+      bottom: false,
+      left: false,
+      right: false,
+      back: false
+    };
+    
+    function toggleRemovePanel(panel) {
+      removedPanels[panel] = !removedPanels[panel];
+      const section = document.getElementById(panel + 'PanelSection');
+      const btn = document.getElementById('remove' + panel.charAt(0).toUpperCase() + panel.slice(1) + 'Btn');
+      
+      if (removedPanels[panel]) {
+        section.classList.add('removed');
+        btn.textContent = 'Restore';
+        btn.classList.add('restore');
+        // Disable material selection
+        document.getElementById(panel + 'Material').disabled = true;
+      } else {
+        section.classList.remove('removed');
+        btn.textContent = 'Remove';
+        btn.classList.remove('restore');
+        // Enable material selection
+        document.getElementById(panel + 'Material').disabled = false;
+      }
+    }
+    
+    // Handle update button click
+    document.getElementById('updateButton').addEventListener('click', function() {
+      const params = {
+        topMaterial: document.getElementById('topMaterial').value,
+        bottomMaterial: document.getElementById('bottomMaterial').value,
+        leftMaterial: document.getElementById('leftMaterial').value,
+        rightMaterial: document.getElementById('rightMaterial').value,
+        backMaterial: document.getElementById('backMaterial').value,
+        removePanels: removedPanels
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.updatePanelMaterials(params);
+      }
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Creation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      background-color: white;
+    }
+    
+    select {
+      appearance: auto;
+      -webkit-appearance: menulist;
+      -moz-appearance: menulist;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .input-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    button.upload-button {
+      background: #28a745;
+    }
+    
+    button.upload-button:hover {
+      background: #218838;
+    }
+    
+    .info-box {
+      background: #e7f3ff;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #0066cc;
+    }
+    
+    .section-divider {
+      border-top: 2px solid #ddd;
+      margin-top: 20px;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📐 Panel Creation</h1>
+    
+    <div class="form-group">
+      <label for="panelName">Panel Name</label>
+      <input type="text" id="panelName" placeholder="Enter panel name (optional)">
+      <div class="input-hint">Leave empty for auto-generated name</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="quantity">Quantity</label>
+      <input type="number" id="quantity" value="1" min="1" max="100">
+      <div class="input-hint">Number of panels to create</div>
+    </div>
+    
+    <div class="form-group">
+      <label>Dimensions (mm)</label>
+      <div class="dimension-grid">
+        <div>
+          <label for="width">Width (W)</label>
+          <input type="number" id="width" value="600" min="10">
+        </div>
+        <div>
+          <label for="height">Height (H)</label>
+          <input type="number" id="height" value="720" min="10">
+        </div>
+        <div>
+          <label for="thickness">Thickness (T)</label>
+          <input type="number" id="thickness" value="18" min="3">
+        </div>
+      </div>
+    </div>
+    
+    <button id="createButton">Create Panel</button>
+    
+    <div class="info-box">
+      ℹ️ Panels are created as standalone components without any material. Use SketchUp's Paint Bucket to color them if needed.<br>
+      📐 Dimensions: Width × Height × Thickness (in mm)
+    </div>
+    
+    <div class="section-divider">
+      <div class="form-group">
+        <label style="font-weight: bold; color: #28a745; margin-bottom: 10px;">Bulk Upload from Excel/CSV</label>
+        <div class="input-hint" style="margin-bottom: 10px;">
+          CSV format: Name,Width,Height,Quantity,Thickness,Material<br>
+          Header row optional. Columns can be: Name/Panel Name, Width/W, Height/H, Quantity/Qty, Thickness/T, Material/M
+        </div>
+        <button type="button" id="bulkUploadButton" class="upload-button">📁 Bulk Upload &amp; Edit</button>
+        <div class="input-hint" style="margin-top: 5px;">Opens table view where you can review and edit all rows before creating</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('createButton').addEventListener('click', function() {
+      const params = {
+        name: document.getElementById('panelName').value,
+        quantity: parseInt(document.getElementById('quantity').value) || 1,
+        width: document.getElementById('width').value,
+        height: document.getElementById('height').value,
+        thickness: document.getElementById('thickness').value
+      };
+      
+      if (window.sketchup) {
+        window.sketchup.createPanel(params);
+      }
+    });
+    
+    document.getElementById('bulkUploadButton').addEventListener('click', function() {
+      if (window.sketchup) {
+        window.sketchup.showBulkUpload();
+      }
+    });
+  </script>
+</body>
+</html>
+

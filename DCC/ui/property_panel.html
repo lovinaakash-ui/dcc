@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component Properties</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #673ab7;
+      padding-bottom: 8px;
+    }
+    
+    .component-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #673ab7;
+      margin-bottom: 15px;
+      padding: 8px;
+      background: #ede7f6;
+      border-radius: 4px;
+    }
+    
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+    
+    input[type="number"], select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: #673ab7;
+    }
+    
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #673ab7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #512da8;
+    }
+    
+    .info-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Properties</h1>
+    
+    <div class="component-name" id="componentName">Component Name</div>
+
+    <div class="form-group">
+      <label for="panelName">Panel Name</label>
+      <input type="text" id="panelName" placeholder="Enter panel name">
+    </div>
+    
+    <div class="form-group">
+      <label>Dimensions (mm)</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label for="width">Width</label>
+          <input type="number" id="width" value="0">
+        </div>
+        <div>
+          <label for="height">Height</label>
+          <input type="number" id="height" value="0">
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="frontMaterial">Material</label>
+      <select id="frontMaterial">
+        <option value="grey">Silver Grey</option>
+        <option value="white">White Matte</option>
+        <option value="oak">Oak Woodgrain</option>
+        <option value="walnut">Walnut</option>
+        <option value="black">Black</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+        <option value="orange">Orange</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="panelThickness">Panel Thickness (mm)</label>
+      <input type="number" id="panelThickness" value="18">
+    </div>
+    
+    <div class="form-group" id="multiApplyGroup" style="display: none;">
+      <label>
+        <input type="checkbox" id="applyToSelection">
+        <span id="applyToSelectionLabel">Apply to selected panels (thickness only)</span>
+      </label>
+      <div style="font-size: 11px; color: #666; margin-top: 4px;">
+        Only thickness will change for all selected panels.
+      </div>
+    </div>
+    
+    <div class="form-group" id="heightAdjustGroup" style="display: none;">
+      <label for="heightAdjust">Height Adjustment (Top/Bottom Panels)</label>
+      <select id="heightAdjust">
+        <option value="front">Front (Change from Back)</option>
+        <option value="end">End (Change from Front)</option>
+      </select>
+      <div style="font-size: 11px; color: #666; margin-top: 4px;">
+        Select how the panel depth should change when height is updated
+      </div>
+    </div>
+    
+    <div class="form-group" id="widthAdjustGroup" style="display: none;">
+      <label for="widthAdjust">Width Adjustment (Left/Right Panels)</label>
+      <select id="widthAdjust">
+        <option value="front">Front (Change from Back)</option>
+        <option value="back">Back (Change from Front)</option>
+      </select>
+      <div style="font-size: 11px; color: #666; margin-top: 4px;">
+        Select how the panel depth should change when width is updated
+      </div>
+    </div>
+    
+    <button id="updateButton">Apply Changes</button>
+    
+    <div class="info-text">
+      Changes update in real-time
+    </div>
+  </div>
+  
+  <script>
+    function loadComponentData(data) {
+      try {
+        console.log('Loading component data:', data);
+        var nameEl = document.getElementById('componentName');
+        var widthEl = document.getElementById('width');
+        var heightEl = document.getElementById('height');
+        var thicknessEl = document.getElementById('panelThickness');
+        var materialEl = document.getElementById('frontMaterial');
+        var nameInputEl = document.getElementById('panelName');
+        var heightAdjustGroup = document.getElementById('heightAdjustGroup');
+        var heightAdjustEl = document.getElementById('heightAdjust');
+        var widthAdjustGroup = document.getElementById('widthAdjustGroup');
+        var widthAdjustEl = document.getElementById('widthAdjust');
+        
+        if (nameEl && data.name) nameEl.textContent = data.name;
+        if (nameInputEl) nameInputEl.value = data.name || '';
+        if (widthEl && data.width !== undefined) widthEl.value = data.width;
+        if (heightEl && data.height !== undefined) heightEl.value = data.height;
+        if (thicknessEl && data.thickness !== undefined) thicknessEl.value = data.thickness;
+        if (materialEl && data.material) {
+          materialEl.value = data.material;
+        }
+        
+        // Show height adjustment option only for top/bottom panels
+        if (data.panelType === 'top' || data.panelType === 'bottom') {
+          if (heightAdjustGroup) heightAdjustGroup.style.display = 'block';
+          if (heightAdjustEl && data.heightAdjust) {
+            heightAdjustEl.value = data.heightAdjust;
+          }
+        } else {
+          if (heightAdjustGroup) heightAdjustGroup.style.display = 'none';
+        }
+        
+        // Show width adjustment option only for left/right panels
+        if (data.panelType === 'left' || data.panelType === 'right') {
+          if (widthAdjustGroup) widthAdjustGroup.style.display = 'block';
+          if (widthAdjustEl && data.widthAdjust) {
+            widthAdjustEl.value = data.widthAdjust;
+          }
+        } else {
+          if (widthAdjustGroup) widthAdjustGroup.style.display = 'none';
+        }
+
+        // Multi-apply thickness option if multiple panels are selected
+        var multiApplyGroup = document.getElementById('multiApplyGroup');
+        var applyToSelectionLabel = document.getElementById('applyToSelectionLabel');
+        if (data.selectionCount && data.selectionCount > 1) {
+          if (multiApplyGroup && applyToSelectionLabel) {
+            applyToSelectionLabel.textContent = 'Apply to ' + data.selectionCount + ' selected panels (thickness only)';
+            multiApplyGroup.style.display = 'block';
+          }
+        } else {
+          if (multiApplyGroup) {
+            multiApplyGroup.style.display = 'none';
+          }
+        }
+      } catch (e) {
+        console.error('Error loading component data:', e);
+      }
+    }
+    
+    // Make function available globally
+    window.loadComponentData = loadComponentData;
+    
+    // Request data when dialog loads
+    if (window.sketchup && window.sketchup.getComponentData) {
+      window.sketchup.getComponentData();
+    } else {
+      // Wait for sketchup object
+      setTimeout(function() {
+        if (window.sketchup && window.sketchup.getComponentData) {
+          window.sketchup.getComponentData();
+        }
+      }, 200);
+    }
+    
+    document.getElementById('updateButton').addEventListener('click', function() {
+      const heightAdjustGroup = document.getElementById('heightAdjustGroup');
+      const heightAdjustEl = document.getElementById('heightAdjust');
+      const widthAdjustGroup = document.getElementById('widthAdjustGroup');
+      const widthAdjustEl = document.getElementById('widthAdjust');
+      
+      const params = {
+        panelName: document.getElementById('panelName').value,
+        width: document.getElementById('width').value,
+        height: document.getElementById('height').value,
+        frontMaterial: document.getElementById('frontMaterial').value,
+        panelThickness: document.getElementById('panelThickness').value
+      };
+      
+      // Add height adjustment if visible (for top/bottom panels)
+      if (heightAdjustGroup && heightAdjustGroup.style.display !== 'none' && heightAdjustEl) {
+        params.heightAdjust = heightAdjustEl.value;
+      }
+      
+      // Add width adjustment if visible (for left/right panels)
+      if (widthAdjustGroup && widthAdjustGroup.style.display !== 'none' && widthAdjustEl) {
+        params.widthAdjust = widthAdjustEl.value;
+      }
+
+      // Add multi-apply flag if enabled
+      var applyToSelectionEl = document.getElementById('applyToSelection');
+      if (applyToSelectionEl && applyToSelectionEl.checked) {
+        params.applyToSelection = true;
+      }
+      
+      if (window.sketchup) {
+        window.sketchup.updateProperty(params);
+      }
+    });
+  </script>
+</body>
+</html>
+
