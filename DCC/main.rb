@@ -15,7 +15,6 @@ module AJ
         @deleted_panel_numbers = []
         @last_selection_time = {}
         @last_selected_entity = nil
-        @update_panel_materials_dialog_on_selection = false
         @update_property_panel_on_selection = false
         @selection_observer = CabinetSelectionObserver.new(self)
         Sketchup.active_model.selection.add_observer(@selection_observer)
@@ -93,45 +92,7 @@ module AJ
         dialog.add_action_callback('getSelectedCabinetProperties') do |action_context|
           model = Sketchup.active_model
           selection = model.selection.first
-          selected_cabinet = nil
-          
-          if selection && selection.is_a?(Sketchup::Group)
-            # Check explicit attribute first (for new files)
-            if selection.get_attribute('DCC', 'is_cabinet')
-              selected_cabinet = selection
-            else
-              # For old files: check if it looks like a cabinet
-              # Check if group name contains "Cabinet" or has DCC cabinet attributes
-              group_name = selection.name.to_s
-              has_cabinet_attributes = selection.get_attribute('DCC', 'cabinet_name') ||
-                                       selection.get_attribute('DCC', 'width') ||
-                                       selection.get_attribute('DCC', 'height') ||
-                                       selection.get_attribute('DCC', 'depth')
-              
-              # Check if group contains panel components (suggests it's a cabinet)
-              has_panel_components = false
-              begin
-                selection.entities.each do |entity|
-                  if entity.is_a?(Sketchup::ComponentInstance)
-                    def_name = entity.definition.name.to_s
-                    if def_name.match?(/LEFT|RIGHT|TOP|BOTTOM/i)
-                      has_panel_components = true
-                      break
-                    end
-                  end
-                end
-              rescue => e
-                # If check fails, continue
-              end
-              
-              # If it looks like a cabinet, treat it as one
-              if group_name.match?(/Cabinet/i) || has_cabinet_attributes || has_panel_components
-                selected_cabinet = selection
-                # Set the attribute so it's recognized in the future
-                selection.set_attribute('DCC', 'is_cabinet', true)
-              end
-            end
-          end
+          selected_cabinet = is_cabinet_group?(selection) ? selection : nil
           
           if selected_cabinet
             # Get current cabinet properties
@@ -204,40 +165,7 @@ module AJ
         dialog.add_action_callback('createCabinet') do |action_context, params|
           model = Sketchup.active_model
           selection = model.selection.first
-          selected_cabinet = nil
-          
-          if selection && selection.is_a?(Sketchup::Group)
-            # Check explicit attribute first (for new files)
-            if selection.get_attribute('DCC', 'is_cabinet')
-              selected_cabinet = selection
-            else
-              # For old files: check if it looks like a cabinet (same logic as above)
-              group_name = selection.name.to_s
-              has_cabinet_attributes = selection.get_attribute('DCC', 'cabinet_name') ||
-                                       selection.get_attribute('DCC', 'width') ||
-                                       selection.get_attribute('DCC', 'height') ||
-                                       selection.get_attribute('DCC', 'depth')
-              
-              has_panel_components = false
-              begin
-                selection.entities.each do |entity|
-                  if entity.is_a?(Sketchup::ComponentInstance)
-                    def_name = entity.definition.name.to_s
-                    if def_name.match?(/LEFT|RIGHT|TOP|BOTTOM/i)
-                      has_panel_components = true
-                      break
-                    end
-                  end
-                end
-              rescue => e
-              end
-              
-              if group_name.match?(/Cabinet/i) || has_cabinet_attributes || has_panel_components
-                selected_cabinet = selection
-                selection.set_attribute('DCC', 'is_cabinet', true)
-              end
-            end
-          end
+          selected_cabinet = is_cabinet_group?(selection) ? selection : nil
           
           if selected_cabinet
             # Update existing cabinet
@@ -1322,8 +1250,8 @@ module AJ
           # Position drawer group
           drawer_group.transformation = Geom::Transformation.translation([panel_thickness, 0, drawer_z])
           
-          # Create drawer components using helper method (passes cabinet_group for material)
-          create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+          # Create drawer components using helper method
+          create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
         end
       end
       
@@ -1358,20 +1286,12 @@ module AJ
         
         spacing = inner_height / (num_shelves + 1)
         
-        # Get cabinet's material from existing panels
-        cabinet_material = get_cabinet_material(cabinet_group)
-        
         (1..num_shelves).each do |i|
           shelf_z = panel_thickness + (i * spacing)
           cabinet_name = cabinet_group.get_attribute('DCC', 'cabinet_name')
           shelf_def = create_panel_component("#{cabinet_name} - SHELF #{i}", shelf_width, shelf_depth, shelf_thickness)
           instance = cabinet_group.entities.add_instance(shelf_def, [panel_thickness, 0, shelf_z])
           instance.set_attribute('DCC', 'panel_type', 'shelf')
-          
-          # Apply cabinet's material to shelf
-          if cabinet_material
-            apply_material_to_component_instance(instance, cabinet_material)
-          end
         end
       end
       
@@ -1390,20 +1310,12 @@ module AJ
         
         spacing = inner_width / (num_partitions + 1)
         
-        # Get cabinet's material from existing panels
-        cabinet_material = get_cabinet_material(cabinet_group)
-        
         (1..num_partitions).each do |i|
           partition_x = panel_thickness + (i * spacing)
           cabinet_name = cabinet_group.get_attribute('DCC', 'cabinet_name')
           partition_def = create_panel_component("#{cabinet_name} - PARTITION #{i}", partition_thickness, partition_depth, partition_height)
           instance = cabinet_group.entities.add_instance(partition_def, [partition_x, 0, panel_thickness])
           instance.set_attribute('DCC', 'panel_type', 'partition')
-          
-          # Apply cabinet's material to partition
-          if cabinet_material
-            apply_material_to_component_instance(instance, cabinet_material)
-          end
         end
       end
       
@@ -1425,7 +1337,6 @@ module AJ
 
         cabinet_group.set_attribute('DCC', 'door_type', door_type)
         cabinet_group.set_attribute('DCC', 'door_thickness', door_thickness)
-        cabinet_group.set_attribute('DCC', 'door_material', params['doorMaterial'])
 
         if door_type == 'none' || door_thickness <= 0
           model.commit_operation
@@ -1436,9 +1347,6 @@ module AJ
         height = cabinet_group.get_attribute('DCC', 'height')
         cabinet_name = cabinet_group.get_attribute('DCC', 'cabinet_name')
 
-        # Get cabinet's material from existing panels
-        cabinet_material = get_cabinet_material(cabinet_group)
-        
         gap = 2.mm
         case door_type
         when 'single'
@@ -1447,11 +1355,6 @@ module AJ
           instance = cabinet_group.entities.add_instance(shutter_def, transformation)
           instance.set_attribute('DCC', 'panel_type', 'shutter')
           instance.set_attribute('DCC', 'shutter_style', 'single')
-          
-          # Apply cabinet's material to shutter
-          if cabinet_material
-            apply_material_to_component_instance(instance, cabinet_material)
-          end
         when 'double'
           shutter_width = (width - gap) / 2.0
           if shutter_width <= 0
@@ -1469,20 +1372,10 @@ module AJ
           left_instance = cabinet_group.entities.add_instance(left_def, left_transformation)
           left_instance.set_attribute('DCC', 'panel_type', 'shutter')
           left_instance.set_attribute('DCC', 'shutter_style', 'double_left')
-          
-          # Apply cabinet's material to left shutter
-          if cabinet_material
-            apply_material_to_component_instance(left_instance, cabinet_material)
-          end
 
           right_instance = cabinet_group.entities.add_instance(right_def, right_transformation)
           right_instance.set_attribute('DCC', 'panel_type', 'shutter')
           right_instance.set_attribute('DCC', 'shutter_style', 'double_right')
-          
-          # Apply cabinet's material to right shutter
-          if cabinet_material
-            apply_material_to_component_instance(right_instance, cabinet_material)
-          end
         else
           UI.messagebox("Unsupported shutter type: #{door_type}")
           model.abort_operation
@@ -3090,42 +2983,7 @@ module AJ
         end
       end
 
-      # Get cabinet's material from existing panels
-      def get_cabinet_material(cabinet_group)
-        # Try to get material from any panel component in the cabinet
-        cabinet_group.entities.each do |entity|
-          if entity.is_a?(Sketchup::ComponentInstance)
-            panel_type = entity.get_attribute('DCC', 'panel_type')
-            # Check core panels (left, right, top, bottom, back) or any panel with material
-            if ['left', 'right', 'top', 'bottom', 'back'].include?(panel_type) || entity.material
-              return entity.material if entity.material
-            end
-          end
-        end
-        # If no material found, return default material
-        nil
-      end
-
-      # Apply material to a component instance (all faces get the same material)
-      def apply_material_to_component_instance(instance, material)
-        definition = instance.definition
-
-        # Apply material at component instance level
-        # First, clear any existing face-level materials so the instance material drives appearance
-        definition.entities.each do |entity|
-          if entity.is_a?(Sketchup::Face)
-            # Clear front and back face materials to avoid overrides
-            entity.material = nil
-            entity.back_material = nil
-          end
-        end
-
-        # Ensure the material is properly assigned at instance level
-        if instance.material != material
-          instance.material = material
-        end
-      end
-      
+     
       # Update component property
       def update_component_property(component, params)
         model = Sketchup.active_model
@@ -3483,32 +3341,8 @@ module AJ
         height_mm = height ? height.to_mm.round(2) : 0
         thickness_mm = thickness ? thickness.to_mm.round(2) : 18
         
-        # Get current material name
-        current_material = component.material
-        material_name = 'grey' # default
-        if current_material
-          material_name_lower = current_material.name.to_s.downcase
-          if material_name_lower.include?('white')
-            material_name = 'white'
-          elsif material_name_lower.include?('oak')
-            material_name = 'oak'
-          elsif material_name_lower.include?('walnut')
-            material_name = 'walnut'
-          elsif material_name_lower.include?('black')
-            material_name = 'black'
-          elsif material_name_lower.include?('blue')
-            material_name = 'blue'
-          elsif material_name_lower.include?('green')
-            material_name = 'green'
-          elsif material_name_lower.include?('orange')
-            material_name = 'orange'
-          end
-        end
-        
-        # Ensure panel_type is set (default to 'standalone' if not detected)
         panel_type = panel_type || 'standalone'
         
-        # Prefer instance name if set; otherwise use definition name
         display_name = component.name.to_s.strip
         display_name = definition.name.to_s if display_name.nil? || display_name.empty?
         
@@ -3517,7 +3351,6 @@ module AJ
           width: width_mm.round(2),
           height: height_mm.round(2),
           thickness: thickness_mm.round(2),
-          material: material_name,
           panelType: panel_type
         }
         
@@ -3584,8 +3417,6 @@ module AJ
         
         # Check if a panel/component is selected (but not a shelf/partition)
         if selection && selection.is_a?(Sketchup::ComponentInstance)
-          definition = selection.definition
-          
           # Check if it's a shelf/partition first
           panel_type = selection.get_attribute('DCC', 'panel_type')
           if panel_type == 'shelf' || panel_type == 'section_shelf' || panel_type == 'partition' || panel_type == 'drawer_partition'
@@ -3595,57 +3426,14 @@ module AJ
               show_relative_action_dialog(cabinet_group, selected_shelf_or_partition)
               return
             end
-          else
-            # Check if it's a panel/component
-            is_panel = definition.get_attribute('DCC', 'is_panel') || 
-                      selection.get_attribute('DCC', 'is_standalone_panel') ||
-                      definition.name.to_s.match?(/LEFT|RIGHT|TOP|BOTTOM|Panel|^p\d+/i) ||
-                      definition.get_attribute('DCC', 'width') ||
-                      definition.get_attribute('DCC', 'height') ||
-                      definition.get_attribute('DCC', 'depth')
-            
-            if is_panel
-              show_component_action_dialog(selection)
-              return
-            end
+          elsif is_panel_component?(selection)
+            show_component_action_dialog(selection)
+            return
           end
         end
         
         # Check if a cabinet group is selected
-        cabinet_group = nil
-        if selection && selection.is_a?(Sketchup::Group)
-          # Check if it's a cabinet (explicit attribute or detected)
-          if selection.get_attribute('DCC', 'is_cabinet')
-            cabinet_group = selection
-          else
-            # For old files: check if it looks like a cabinet
-            group_name = selection.name.to_s
-            has_cabinet_attributes = selection.get_attribute('DCC', 'cabinet_name') ||
-                                     selection.get_attribute('DCC', 'width') ||
-                                     selection.get_attribute('DCC', 'height') ||
-                                     selection.get_attribute('DCC', 'depth')
-            
-            has_panel_components = false
-            begin
-              selection.entities.each do |entity|
-                if entity.is_a?(Sketchup::ComponentInstance)
-                  def_name = entity.definition.name.to_s
-                  if def_name.match?(/LEFT|RIGHT|TOP|BOTTOM/i)
-                    has_panel_components = true
-                    break
-                  end
-                end
-              end
-            rescue => e
-            end
-            
-            if group_name.match?(/Cabinet/i) || has_cabinet_attributes || has_panel_components
-              cabinet_group = selection
-              # Set the attribute so it's recognized in the future
-              selection.set_attribute('DCC', 'is_cabinet', true)
-            end
-          end
-        end
+        cabinet_group = is_cabinet_group?(selection) ? selection : nil
         
         
         # If we have a cabinet selected, show main cabinet options
@@ -3818,54 +3606,17 @@ module AJ
         UI.messagebox("Cabinet properties updated successfully!")
       end
       
-      # Show dialog to edit panel materials
       # Get currently selected cabinet
       def get_selected_cabinet
         model = Sketchup.active_model
         selection = model.selection.first
         
         return nil unless selection
-        
-        if selection.is_a?(Sketchup::Group)
-          # Check if it's a cabinet
-          if selection.get_attribute('DCC', 'is_cabinet')
-            return selection
-          else
-            # Check if it looks like a cabinet
-            group_name = selection.name.to_s
-            has_cabinet_attributes = selection.get_attribute('DCC', 'cabinet_name') ||
-                                   selection.get_attribute('DCC', 'width') ||
-                                   selection.get_attribute('DCC', 'height') ||
-                                   selection.get_attribute('DCC', 'depth')
-            
-            has_panel_components = false
-            begin
-              selection.entities.each do |entity|
-                if entity.is_a?(Sketchup::ComponentInstance)
-                  def_name = entity.definition.name.to_s
-                  if def_name.match?(/LEFT|RIGHT|TOP|BOTTOM/i)
-                    has_panel_components = true
-                    break
-                  end
-                end
-              end
-            rescue => e
-            end
-            
-            if group_name.match?(/Cabinet/i) || has_cabinet_attributes || has_panel_components
-              selection.set_attribute('DCC', 'is_cabinet', true)
-              return selection
-            end
-          end
-        end
-        
+        return selection if is_cabinet_group?(selection)
+
         nil
       end
       
-      
-      # Get current materials for each panel type
-
-      # Find parent cabinet for a component instance
       def find_parent_cabinet(entity)
         # Check if entity is in a group (cabinet)
         parent = entity.parent
@@ -4008,9 +3759,6 @@ module AJ
         # Calculate spacing (equal spacing)
         spacing = (inner_width - (num_partitions * partition_thickness)) / (num_partitions + 1)
         
-        # Get cabinet's material from existing panels
-        cabinet_material = get_cabinet_material(cabinet_group)
-        
         # Get existing drawer partitions to avoid duplicates
         existing_partitions = get_drawer_partitions(cabinet_group)
         existing_count = existing_partitions.length
@@ -4024,11 +3772,6 @@ module AJ
           instance = cabinet_group.entities.add_instance(partition_def, [partition_x, 0, panel_thickness])
           instance.set_attribute('DCC', 'panel_type', 'drawer_partition')
           instance.set_attribute('DCC', 'partition_index', partition_index)
-          
-          # Apply cabinet's material to drawer partition
-          if cabinet_material
-            apply_material_to_component_instance(instance, cabinet_material)
-          end
         end
         
         model.commit_operation
@@ -4775,7 +4518,7 @@ module AJ
             drawer_group.transformation = Geom::Transformation.translation([drawer_x, 0, z_position])
             
             # Create drawer components
-            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
           end
         else
           # Horizontal arrangement: stack vertically
@@ -4816,7 +4559,7 @@ module AJ
             drawer_group.transformation = Geom::Transformation.translation([panel_thickness, 0, drawer_z])
             
             # Create drawer components
-            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
           end
         end
         
@@ -4885,7 +4628,7 @@ module AJ
             drawer_group.transformation = Geom::Transformation.translation([drawer_x, 0, z_position])
             
             # Create drawer components
-            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
           end
         else
           # Horizontal arrangement: stack vertically
@@ -4926,7 +4669,7 @@ module AJ
             drawer_group.transformation = Geom::Transformation.translation([section[:left_x], 0, drawer_z])
             
             # Create drawer components
-            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
           end
         end
         
@@ -5122,7 +4865,7 @@ module AJ
             drawer_group.transformation = Geom::Transformation.translation([drawer_x, 0, drawer_z])
             
             # Create drawer components
-            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
           end
         else
           # Horizontal arrangement: stack vertically (original behavior)
@@ -5175,7 +4918,7 @@ module AJ
             drawer_group.transformation = Geom::Transformation.translation([section[:left_x], 0, drawer_z])
             
             # Create drawer components
-            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group)
+            create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
           end
         end
         
@@ -5183,26 +4926,14 @@ module AJ
       end
       
       # Helper method to create drawer components
-      def create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness, cabinet_group = nil)
-        # Get cabinet's material from cabinet_group if provided
-        cabinet_material = nil
-        if cabinet_group
-          cabinet_material = get_cabinet_material(cabinet_group)
-        end
-        
+      def create_drawer_components(drawer_group, cabinet_name, drawer_index, drawer_width, drawer_depth, drawer_height, drawer_front_thickness)
         # Create drawer bottom
         drawer_bottom = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} BOTTOM", drawer_width, drawer_depth, 5.mm)
         bottom_instance = drawer_group.entities.add_instance(drawer_bottom, [0, 0, 0])
-        if cabinet_material
-          apply_material_to_component_instance(bottom_instance, cabinet_material)
-        end
         
         # Create drawer front
         drawer_front = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} FRONT", drawer_width, drawer_front_thickness, drawer_height)
         front_instance = drawer_group.entities.add_instance(drawer_front, [0, -drawer_front_thickness, 0])
-        if cabinet_material
-          apply_material_to_component_instance(front_instance, cabinet_material)
-        end
         
         # Create drawer sides (left and right)
         side_depth = drawer_depth
@@ -5211,24 +4942,15 @@ module AJ
         
         left_side = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} LEFT SIDE", side_thickness, side_depth, side_height)
         left_instance = drawer_group.entities.add_instance(left_side, [0, 0, 5.mm])
-        if cabinet_material
-          apply_material_to_component_instance(left_instance, cabinet_material)
-        end
         
         right_side = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} RIGHT SIDE", side_thickness, side_depth, side_height)
         right_instance = drawer_group.entities.add_instance(right_side, [drawer_width - side_thickness, 0, 5.mm])
-        if cabinet_material
-          apply_material_to_component_instance(right_instance, cabinet_material)
-        end
         
         # Create drawer back
         back_width = drawer_width - (2 * side_thickness)
         back_height = side_height
         drawer_back = create_panel_component("#{cabinet_name} - DRAWER #{drawer_index} BACK", back_width, side_thickness, back_height)
         back_instance = drawer_group.entities.add_instance(drawer_back, [side_thickness, side_depth, 5.mm])
-        if cabinet_material
-          apply_material_to_component_instance(back_instance, cabinet_material)
-        end
       end
       
       # Get drawers for a specific section
@@ -5248,7 +4970,72 @@ module AJ
       end
       
       private
-      
+
+      def is_cabinet_group?(selection)
+        return false unless selection.is_a?(Sketchup::Group)
+
+        if selection.get_attribute('DCC', 'is_cabinet')
+          return true
+        end
+
+        group_name = selection.name.to_s
+        has_cabinet_attributes = selection.get_attribute('DCC', 'cabinet_name') ||
+                                 selection.get_attribute('DCC', 'width') ||
+                                 selection.get_attribute('DCC', 'height') ||
+                                 selection.get_attribute('DCC', 'depth')
+
+        has_panel_components = false
+        begin
+          selection.entities.each do |entity|
+            if entity.is_a?(Sketchup::ComponentInstance)
+              if entity.definition.name.to_s.match?(/LEFT|RIGHT|TOP|BOTTOM/i)
+                has_panel_components = true
+                break
+              end
+            end
+          end
+        rescue => e
+        end
+
+        if group_name.match?(/Cabinet/i) || has_cabinet_attributes || has_panel_components
+          selection.set_attribute('DCC', 'is_cabinet', true)
+          return true
+        end
+
+        false
+      end
+
+      def is_panel_component?(instance)
+        return false unless instance.is_a?(Sketchup::ComponentInstance)
+
+        definition = instance.definition
+
+        is_panel = definition.get_attribute('DCC', 'is_panel') ||
+                   instance.get_attribute('DCC', 'is_standalone_panel') ||
+                   instance.get_attribute('DCC', 'panel_type')
+
+        has_dcc_attributes = definition.get_attribute('DCC', 'width') ||
+                             definition.get_attribute('DCC', 'height') ||
+                             definition.get_attribute('DCC', 'depth') ||
+                             instance.get_attribute('DCC', 'width') ||
+                             instance.get_attribute('DCC', 'height') ||
+                             instance.get_attribute('DCC', 'thickness')
+
+        is_panel_by_name = definition.name.to_s.match?(/LEFT|RIGHT|TOP|BOTTOM|Panel|^p\d+/i)
+
+        is_panel_by_shape = false
+        begin
+          bbox = instance.bounds
+          if bbox.valid?
+            dims = [(bbox.max - bbox.min).x.abs, (bbox.max - bbox.min).y.abs, (bbox.max - bbox.min).z.abs].sort
+            is_panel_by_shape = dims[0] < 100.mm && dims[1] >= 50.mm && dims[2] >= 50.mm
+          end
+        rescue => e
+        end
+
+        is_panel || has_dcc_attributes || is_panel_by_name || is_panel_by_shape
+      end
+
       def existing_cabinet_names
         model = Sketchup.active_model
         return [] unless model
@@ -5376,20 +5163,6 @@ module AJ
       end
       
       def onSelectionBulkChange(selection)
-        # Update panel materials dialog if it's open and auto-update is enabled
-        if @manager.update_panel_materials_dialog_on_selection
-          dialog = @manager.instance_variable_get(:@dialogs)['edit_panel_materials']
-          if dialog && dialog.visible?
-            cabinet_group = @manager.get_selected_cabinet
-            if cabinet_group
-              @manager.update_edit_panel_materials_dialog_content(dialog, cabinet_group)
-            else
-              # No cabinet selected - show empty state
-              @manager.update_edit_panel_materials_dialog_content(dialog, nil)
-            end
-          end
-        end
-        
         # If the Cabinet Setup dialog is open, keep it in sync with the
         # current selection so it switches between edit and create modes
         # without needing to close/reopen the dialog. Use the same JS pattern
@@ -5437,55 +5210,8 @@ module AJ
         return unless is_double_click
         
         # Show property panel for DCC components (both cabinet panels and standalone panels)
-        if selected.is_a?(Sketchup::ComponentInstance)
-          definition = selected.definition
-          
-          # Check explicit DCC attributes first (for new files)
-          is_panel = definition.get_attribute('DCC', 'is_panel')
-          is_standalone_panel = selected.get_attribute('DCC', 'is_standalone_panel')
-          
-          # If explicit attributes found, show panel
-          if is_panel || is_standalone_panel
-            @manager.show_property_panel(selected)
-            return
-          end
-          
-          # For existing/old files: detect panels by name pattern or component structure
-          component_name = definition.name.to_s
-          
-          # Check if name suggests it's a panel (LEFT, RIGHT, TOP, BOTTOM, Panel, or p1, p2, etc.)
-          is_panel_by_name = component_name.match?(/LEFT|RIGHT|TOP|BOTTOM|Panel|^p\d+/i)
-          
-          # Check if it has DCC attributes (even if not explicitly marked as panel)
-          has_dcc_attributes = definition.get_attribute('DCC', 'width') || 
-                               definition.get_attribute('DCC', 'height') ||
-                               definition.get_attribute('DCC', 'depth') ||
-                               selected.get_attribute('DCC', 'panel_type') ||
-                               selected.get_attribute('DCC', 'width') ||
-                               selected.get_attribute('DCC', 'height') ||
-                               selected.get_attribute('DCC', 'thickness')
-          
-          # Check if it's a rectangular panel-like shape (thin dimension suggests it's a panel)
-          is_panel_by_shape = false
-          begin
-            bbox = selected.bounds
-            if bbox.valid?
-              size = bbox.max - bbox.min
-              dimensions = [size.x.abs, size.y.abs, size.z.abs].sort
-              # Check if smallest dimension is relatively small (suggests panel thickness)
-              # and other dimensions are reasonable (at least 50mm)
-              if dimensions[0] < 100.mm && dimensions[1] >= 50.mm && dimensions[2] >= 50.mm
-                is_panel_by_shape = true
-              end
-            end
-          rescue => e
-            # If bounding box check fails, skip shape detection
-          end
-          
-          # Show property panel if any detection method suggests it's a panel
-          if is_panel_by_name || has_dcc_attributes || is_panel_by_shape
-            @manager.show_property_panel(selected)
-          end
+        if selected.is_a?(Sketchup::ComponentInstance) && @manager.is_panel_component?(selected)
+          @manager.show_property_panel(selected)
         end
       end
     end
@@ -5548,58 +5274,12 @@ module AJ
       cmd_edit_panel = UI::Command.new("Edit Panel") {
         @manager ||= CabinetManager.new
         model = Sketchup.active_model
-        # Support multi-selection: find any component instances in the current selection
         selection_all = model.selection.to_a
         component_instances = selection_all.select { |e| e.is_a?(Sketchup::ComponentInstance) }
         selection = component_instances.first
         
         if selection
-          # Check if it's a panel - use comprehensive detection
-          definition = selection.definition
-          
-          # Check explicit DCC attributes first
-          is_panel = definition.get_attribute('DCC', 'is_panel') || 
-                    selection.get_attribute('DCC', 'is_standalone_panel') ||
-                    selection.get_attribute('DCC', 'panel_type')
-          
-          # Check if it has DCC attributes (even if not explicitly marked as panel)
-          has_dcc_attributes = definition.get_attribute('DCC', 'width') || 
-                               definition.get_attribute('DCC', 'height') ||
-                               definition.get_attribute('DCC', 'depth') ||
-                               selection.get_attribute('DCC', 'width') ||
-                               selection.get_attribute('DCC', 'height') ||
-                               selection.get_attribute('DCC', 'thickness')
-          
-          # Check name pattern
-          component_name = definition.name.to_s
-          is_panel_by_name = component_name.match?(/LEFT|RIGHT|TOP|BOTTOM|Panel|^p\d+/i)
-          
-          # Check if it's a rectangular panel-like shape (thin dimension suggests it's a panel)
-          is_panel_by_shape = false
-          begin
-            bbox = selection.bounds
-            if bbox.valid?
-              size = bbox.max - bbox.min
-              dimensions = [size.x.abs, size.y.abs, size.z.abs].sort
-              # Check if smallest dimension is relatively small (suggests panel thickness)
-              # and other dimensions are reasonable (at least 50mm)
-              if dimensions[0] < 100.mm && dimensions[1] >= 50.mm && dimensions[2] >= 50.mm
-                is_panel_by_shape = true
-              end
-            end
-          rescue => e
-            # If bounding box check fails, skip shape detection
-          end
-          
-          # Show property panel if any detection method suggests it's a panel
-          # Allow ALL component instances to be edited as panels
-          if is_panel || has_dcc_attributes || is_panel_by_name || is_panel_by_shape
-            # Directly open property panel, no intermediate dialog or popup
-            @manager.show_property_panel(selection)
-          else
-            # Even if not detected as a panel, allow editing - user might want to convert it
-            @manager.show_property_panel(selection)
-          end
+          @manager.show_property_panel(selection)
         else
           UI.messagebox("Please select a panel component first!")
         end
@@ -5608,64 +5288,6 @@ module AJ
       cmd_edit_panel.large_icon = File.join(__dir__, 'icons', 'structure.svg')
       cmd_edit_panel.tooltip = "Edit Panel Properties"
       toolbar.add_item(cmd_edit_panel)
-      
-      # Apply current SketchUp material to selected cabinet button
-      cmd_apply_current_material = UI::Command.new("Apply Current Material to Cabinet") {
-        begin
-          model = Sketchup.active_model
-          selection = model.selection
-          cabinet_group = selection.first
-
-          ok = true
-
-          # Validate selection
-          if !cabinet_group || !cabinet_group.is_a?(Sketchup::Group) || !cabinet_group.get_attribute('DCC', 'is_cabinet')
-            UI.messagebox("Please select a DCC cabinet (group) first!")
-            ok = false
-          end
-
-          current_material = model.materials.current if ok
-          if ok && !current_material
-            UI.messagebox("Please pick a material in SketchUp's Materials panel or with the Paint Bucket tool first.")
-            ok = false
-          end
-
-          if ok
-            model.start_operation('Apply Current Material to Cabinet', true)
-            begin
-              # Apply to all panel components inside the cabinet at instance level only
-              cabinet_group.entities.each do |entity|
-                next unless entity.is_a?(Sketchup::ComponentInstance)
-
-                instance = entity
-                definition = instance.definition
-
-                # Clear any face-level materials so instance material drives appearance
-                definition.entities.each do |e|
-                  if e.is_a?(Sketchup::Face)
-                    e.material = nil
-                    e.back_material = nil
-                  end
-                end
-
-                # Set material on the component instance only
-                instance.material = current_material
-              end
-
-              model.commit_operation
-            rescue => e
-              model.abort_operation
-              UI.messagebox("Error applying current material: #{e.message}")
-            end
-          end
-        rescue => e_outer
-          UI.messagebox("Error: #{e_outer.message}")
-        end
-      }
-      cmd_apply_current_material.small_icon = File.join(__dir__, 'icons', 'material.svg')
-      cmd_apply_current_material.large_icon = File.join(__dir__, 'icons', 'material.svg')
-      cmd_apply_current_material.tooltip = "Use SketchUp's current material on selected cabinet"
-      toolbar.add_item(cmd_apply_current_material)
       
       toolbar.show
     end
@@ -5688,68 +5310,21 @@ module AJ
         next unless selected
         
         # Check if it's a component/panel
-        if selected.is_a?(Sketchup::ComponentInstance)
-          definition = selected.definition
-          
-          # Check if it's a panel (same detection logic as observer)
-          is_panel = definition.get_attribute('DCC', 'is_panel') || 
-                    selected.get_attribute('DCC', 'is_standalone_panel') ||
-                    definition.name.to_s.match?(/LEFT|RIGHT|TOP|BOTTOM|Panel|^p\d+/i) ||
-                    definition.get_attribute('DCC', 'width') ||
-                    definition.get_attribute('DCC', 'height') ||
-                    definition.get_attribute('DCC', 'depth') ||
-                    selected.get_attribute('DCC', 'panel_type')
-          
-          if is_panel
-            # Capture selected entity for the callback
-            selected_panel = selected
-            menu.add_separator
-            menu.add_item('Component Properties') {
-              manager.show_component_action_dialog(selected_panel)
-            }
-          end
-        elsif selected.is_a?(Sketchup::Group)
-          # Check if it's a cabinet
-          is_cabinet = selected.get_attribute('DCC', 'is_cabinet')
-          
-          if !is_cabinet
-            # Check if it looks like a cabinet
-            group_name = selected.name.to_s
-            has_cabinet_attributes = selected.get_attribute('DCC', 'cabinet_name') ||
-                                     selected.get_attribute('DCC', 'width') ||
-                                     selected.get_attribute('DCC', 'height') ||
-                                     selected.get_attribute('DCC', 'depth')
-            
-            has_panel_components = false
-            begin
-              selected.entities.each do |entity|
-                if entity.is_a?(Sketchup::ComponentInstance)
-                  def_name = entity.definition.name.to_s
-                  if def_name.match?(/LEFT|RIGHT|TOP|BOTTOM/i)
-                    has_panel_components = true
-                    break
-                  end
-                end
-              end
-            rescue => e
-            end
-            
-            if group_name.match?(/Cabinet/i) || has_cabinet_attributes || has_panel_components
-              is_cabinet = true
-              selected.set_attribute('DCC', 'is_cabinet', true)
-            end
-          end
-          
-          if is_cabinet
-            # Capture selected cabinet for the callback
-            selected_cabinet = selected
-            menu.add_separator
-            menu.add_item('Edit Cabinet Properties') {
-              manager.show_edit_cabinet_properties_dialog(selected_cabinet)
-            }
-            menu.add_item('Cabinet Actions') {
-              manager.show_main_cabinet_action_dialog(selected_cabinet)
-            }
+        if selected.is_a?(Sketchup::ComponentInstance) && manager.is_panel_component?(selected)
+          selected_panel = selected
+          menu.add_separator
+          menu.add_item('Component Properties') {
+            manager.show_component_action_dialog(selected_panel)
+          }
+        elsif selected.is_a?(Sketchup::Group) && manager.is_cabinet_group?(selected)
+          selected_cabinet = selected
+          menu.add_separator
+          menu.add_item('Edit Cabinet Properties') {
+            manager.show_edit_cabinet_properties_dialog(selected_cabinet)
+          }
+          menu.add_item('Cabinet Actions') {
+            manager.show_main_cabinet_action_dialog(selected_cabinet)
+          }
           end
         end
       end
@@ -5776,58 +5351,6 @@ module AJ
       submenu.add_item('Panel Creation') {
         @manager ||= CabinetManager.new
         @manager.show_panel_creation_dialog
-      }
-      submenu.add_item('Apply Current Material to Cabinet') {
-        begin
-          model = Sketchup.active_model
-          selection = model.selection
-          cabinet_group = selection.first
-
-          ok = true
-
-          # Validate selection
-          if !cabinet_group || !cabinet_group.is_a?(Sketchup::Group) || !cabinet_group.get_attribute('DCC', 'is_cabinet')
-            UI.messagebox("Please select a DCC cabinet (group) first!")
-            ok = false
-          end
-
-          current_material = model.materials.current if ok
-          if ok && !current_material
-            UI.messagebox("Please pick a material in SketchUp's Materials panel or with the Paint Bucket tool first.")
-            ok = false
-          end
-
-          if ok
-            model.start_operation('Apply Current Material to Cabinet', true)
-            begin
-              # Apply to all panel components inside the cabinet at instance level only
-              cabinet_group.entities.each do |entity|
-                next unless entity.is_a?(Sketchup::ComponentInstance)
-
-                instance = entity
-                definition = instance.definition
-
-                # Clear any face-level materials so instance material drives appearance
-                definition.entities.each do |e|
-                  if e.is_a?(Sketchup::Face)
-                    e.material = nil
-                    e.back_material = nil
-                  end
-                end
-
-                # Set material on the component instance only
-                instance.material = current_material
-              end
-
-              model.commit_operation
-            rescue => e
-              model.abort_operation
-              UI.messagebox("Error applying current material: #{e.message}")
-            end
-          end
-        rescue => e_outer
-          UI.messagebox("Error: #{e_outer.message}")
-        end
       }
       submenu.add_separator
       submenu.add_item('Cabinet Actions (Shelves/Partitions/Drawers)') {
